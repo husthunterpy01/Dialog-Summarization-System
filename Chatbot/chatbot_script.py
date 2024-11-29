@@ -1,4 +1,6 @@
 from llama_cpp import Llama
+import streamlit as st
+
 class LLM:
     def __init__(self, model_path):
         # Load the model using llama_cpp
@@ -15,7 +17,8 @@ class LLM:
             )
             # Get the raw output text
             raw_output = response.get('choices', [{}])[0].get('text', "").strip()
-
+            if not raw_output:
+                raw_output = "I'm sorry this knowledge hasn't been updated to me ? Can you ask another question ?"
             # Clean up any performance or additional logs from the raw output
             clean_output = self.clean_output(raw_output)
 
@@ -32,10 +35,8 @@ class LLM:
         return "\n".join(cleaned_lines).strip()
 
 
-import streamlit as st
-
 # Initialize the LLM with the path to your Llama model
-model_path = "/home/nhat/Dialog-Summarization-System/Chatbot/LLM_Model/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+model_path = "/home/nhat/Dialog-Summarization-System/LLM_Model/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
 llama_chatbot = LLM(model_path)
 
 # Streamlit UI
@@ -45,11 +46,16 @@ st.write("Chat with the Llama model!")
 # Initialize session state to keep track of chat history
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
+if 'user_input' not in st.session_state:
+    st.session_state.user_input = ""
 
 # User input section
-user_input = st.text_input("Your Question:")
+user_input = st.text_input("Your Question:", value=st.session_state.user_input, key="user_input")
 
-# If the user inputs something
+# Create an empty placeholder for the chat interaction to simulate real-time conversation
+chat_placeholder = st.empty()
+
+# If the user inputs something, generate a response
 if user_input:
     # Generate the chatbot's response using llamacpp
     response = llama_chatbot.generate_response(user_input)
@@ -58,7 +64,13 @@ if user_input:
     st.session_state.conversation.append(f"You: {user_input}")
     st.session_state.conversation.append(f"Chatbot: {response}")
 
-# Display the chat history in a text area
-chat_history = "\n".join(st.session_state.conversation)
-st.text_area("Chat History", chat_history, height=400, max_chars=None, key="chat_history", disabled=True)
+# Display the conversation dynamically using a loop to simulate real-time interaction
+with chat_placeholder.container():
+    for message in st.session_state.conversation:
+        if message.startswith("You:"):
+            st.markdown(f"<div style='background-color:#E0F7FA;padding:10px;margin-bottom:5px;border-radius:5px;'>**You:** {message[4:]}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div style='background-color:#F1F8E9;padding:10px;margin-bottom:5px;border-radius:5px;'>**Chatbot:** {message[9:]}</div>", unsafe_allow_html=True)
 
+# Scrollable container for chat history
+st.text_area("Chat History", "\n".join(st.session_state.conversation), height=400, max_chars=None, key="chat_history", disabled=True)

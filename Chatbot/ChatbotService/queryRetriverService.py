@@ -17,9 +17,9 @@ def get_file_name(file_path) -> str:
 
 def extract_text_from_pdf(file_path) -> str:
     if os.path.exists(file_path):
-        doc = fitz.open(file_path)
+        docs = fitz.open(file_path)
         text = ""
-        for page in doc:
+        for page in docs:
             text += page.get_text()
         return text
 

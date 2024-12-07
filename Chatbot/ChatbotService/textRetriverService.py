@@ -1,4 +1,3 @@
-# pdf_processor.py
 import os
 import fitz  # PyMuPDF
 import pdfplumber

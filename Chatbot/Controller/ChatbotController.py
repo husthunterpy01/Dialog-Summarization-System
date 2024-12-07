@@ -1,26 +1,44 @@
-# api.py
-
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from typing import List
 from pydantic import BaseModel
+from PyPDF2 import PdfReader
 from pdf_processor import process_pdf
+from starlette.responses import JSONResponse
+from streamlit import status
 from Chatbot.ChatbotService.chatbotService import generate_response
+from Chatbot.ChatbotService.textRetriverService import process_pdf
+from Chatbot.Model import FilePath,QueryResponse
 app = FastAPI()
 
-class Query(BaseModel):
-    user_query: str
+@app.post("/user/query/")
+async def query(query: QueryResponse):
+    try:
+        response = generate_response(query.user_query)
+        return JSONResponse(
+            status_code=200,
+            content={"response": response}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-@app.post("/query/")
-async def query(query: Query):
-    response = generate_response(query.user_query)
-    return {"response": response}
+@app.post("/user/upload_pdf/")
+async def upload_pdf(filepaths: List[FilePath]):
+    for filepath in filepaths:
+        if not os.getenv(filepath):
+            raise HTTPException(status=400, detail="File path does not exist")
 
-@app.post("/upload_pdf/")
-async def upload_pdf(file: bytes):
-    with open(file, "wb") as f:
-        f.write(file)
+        if not filepath.filePath.endswith(".pdf"):
+            raise HTTPException(status=400, detail={f"Uploaded is not the pdf file, please try again!"})
 
-    # Process PDF and save embeddings
-    #Example
-    documents = process_pdf("temp.pdf")
-    return {"message": "PDF processed and embeddings saved", "documents": len(documents)}
+        # File processing
+        try:
+            document_processed = process_pdf(filepath)
+            return JSONResponse(
+                status_code=200,
+                content={"message": "PDF processed successfully"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 

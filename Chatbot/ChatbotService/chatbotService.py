@@ -1,10 +1,11 @@
 # chatbot.py
 import os
-
-from vectordbHandlingService import search_vectors
+from .vectordbHandlingService import search_vectors
 from sentence_transformers import SentenceTransformer
 from llama_cpp import Llama
+from dotenv import load_dotenv
 
+load_dotenv()
 LLM_MODEL = os.getenv("LLM_MODEL")
 # Load the sentence transformer model for the query
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')

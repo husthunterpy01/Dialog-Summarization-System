@@ -1,6 +1,12 @@
 import uvicorn
-from Controller.ChatbotController import app
+from fastapi import FastAPI
+from Chatbot.Controller.ChatbotController import router as chatbot_router
 
-# Program execution
-if __name__ == "main":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# Initialize FastAPI app
+app = FastAPI()
+
+# Include the router
+app.include_router(chatbot_router, prefix="/api", tags=["Chatbot"])
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

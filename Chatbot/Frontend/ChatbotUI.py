@@ -1,6 +1,9 @@
 import streamlit as st
 import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 CHAT_ENDPOINT = os.getenv("CHAT_ENDPOINT")
 # Streamlit UI

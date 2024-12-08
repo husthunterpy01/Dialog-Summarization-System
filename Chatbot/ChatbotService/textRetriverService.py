@@ -2,7 +2,7 @@ import os
 import fitz  # PyMuPDF
 import pdfplumber
 from sentence_transformers import SentenceTransformer
-from vectordbHandlingService import save_embeddings_to_db
+from .vectordbHandlingService import save_embeddings_to_db
 
 # Load the sentence transformer model
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')

@@ -1,13 +1,8 @@
 import os
-import fitz  # PyMuPDF
+import fitz
 import pdfplumber
-from sentence_transformers import SentenceTransformer
-from .vectordbHandlingService import save_embeddings_to_db
-
-# Load the sentence transformer model
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-
-
+from Chatbot.ChatbotService.vectordbHandlingService import save_embeddings_to_db
+from Chatbot.utils.embedding_utils import get_embedding
 def get_file_name(file_path) -> str:
     file_name_with_extension = os.path.basename(file_path)
     file_name, _ = os.path.splitext(file_name_with_extension)
@@ -43,11 +38,6 @@ def convert_text_to_chunk(text, chunk_size: int = 500, chunk_overlap: int = 200)
         chunks.append(chunk)
         start = end - chunk_overlap
     return chunks
-
-
-def get_embedding(text_list):
-    return model.encode(text_list)
-
 
 def chunk_table_data(tables, chunk_size: int = 500, chunk_overlap: int = 200):
     table_chunks = []

@@ -1,17 +1,7 @@
-import os
-from dotenv import load_dotenv
-from pymongo import MongoClient
-
-load_dotenv()
-
-# MongoDB connection setup
-VECTOR_DB = os.getenv("VECTOR_DB")
-VECTOR_DOCUMENT = os.getenv("VECTOR_DOCUMENT")
-
-client = MongoClient(os.getenv("MONGO_URI"))
-db = client[VECTOR_DB]
-collection = db[VECTOR_DOCUMENT]
-
+from pymongo.operations import SearchIndexModel
+from Chatbot.utils.embedding_utils import get_embedding
+from Chatbot.utils.database import collection
+import numpy as np
 
 def save_embeddings_to_db(documents):
     if documents:
@@ -21,26 +11,47 @@ def save_embeddings_to_db(documents):
         print("No documents to save.")
 
 
-def create_index():
-    collection.create_index([("source", 1), ("chunk_id", 1)])
+
+def create_search_index():
+    index_name="vector_index"
+    search_index_model = SearchIndexModel(
+      definition = {
+        "fields": [
+          {
+            "type": "vector",
+            "numDimensions": 768,
+            "path": "embedding",
+            "similarity": "cosine"
+          }
+        ]
+      },
+      name = index_name,
+      type = "vectorSearch"
+    )
+    collection.create_search_index(model=search_index_model)
 
 
-def search_vectors(query_embedding, limit=5):
-    # Perform a similarity search using Atlas Full-Text Search with Vector Search
-    result = collection.aggregate([
-        {
-            "$search": {
-                "index": "default",  # Name of your Atlas search index
-                "knnBeta": {
-                    "vector": {
-                        "path": "embedding",  # The field where embeddings are stored
-                        "queryVector": query_embedding,  # The query vector
-                        "k": limit,  # Number of results to return
-                        "metric": "cosine"  # Similarity metric (cosine or dot product)
-                    }
-                }
+def get_query_results(query):
+  query_embedding = get_embedding(query)
+  query_embedding = query_embedding.flatten().tolist()
+  pipeline = [
+      {
+            "$vectorSearch": {
+              "index": "vector_index",
+              "queryVector": query_embedding,
+              "path": "embedding",
+              "exact": True,
+              "limit": 5
             }
-        }
-    ])
-
-    return list(result)
+      }, {
+            "$project": {
+              "_id": 0,
+              "content": 1
+         }
+      }
+  ]
+  results = collection.aggregate(pipeline)
+  array_of_results = []
+  for doc in results:
+      array_of_results.append(doc)
+  return array_of_results

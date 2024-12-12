@@ -1,7 +1,5 @@
 from pymongo.operations import SearchIndexModel
-from Chatbot.utils.embedding_utils import get_embedding
 from Chatbot.utils.database import collection
-import numpy as np
 
 def save_embeddings_to_db(documents):
     if documents:
@@ -19,7 +17,7 @@ def create_search_index():
         "fields": [
           {
             "type": "vector",
-            "numDimensions": 768,
+            "numDimensions": 384,
             "path": "embedding",
             "similarity": "cosine"
           }
@@ -28,12 +26,10 @@ def create_search_index():
       name = index_name,
       type = "vectorSearch"
     )
+    collection.drop_indexes()
     collection.create_search_index(model=search_index_model)
 
-
-def get_query_results(query):
-  query_embedding = get_embedding(query)
-  query_embedding = query_embedding.flatten().tolist()
+def get_query_results(query_embedding):
   pipeline = [
       {
             "$vectorSearch": {

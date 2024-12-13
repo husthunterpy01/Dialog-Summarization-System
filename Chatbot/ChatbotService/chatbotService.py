@@ -17,18 +17,29 @@ def generate_response(user_query):
     # Search the database for relevant document embeddings
     search_results = get_query_results(query_embedding)
 
-    context = "\n".join(result['content'] for result in search_results if "content" in result)
-    prompt = f"Context: {search_results}\n\nQuestion: {user_query}\nAnswer:"
+    context = truncate_search_results(search_results)
+    prompt = f"Context: {context}\n\nQuestion: {user_query}\nAnswer:"
 
     llama_chatbot = LLM(LLM_MODEL)
-    llm_response = llama_chatbot.generate_response(prompt)  # Store LLM response separately
+    llm_response = llama_chatbot.generate_response(prompt)
 
     # Build the response string
     response = "Here's what I found from the database:\n"
-    # for result in search_results:
-    #     response += f"- {result['content']}\n"
-    #
-    # response += "\nLLM Response:\n"
     response += llm_response  # Append LLM response
 
     return response
+
+
+
+def truncate_search_results(search_results, max_chars=1500):
+    context = ""
+    char_count = 0
+
+    for result in search_results:
+        content = result.get("content", "")
+        if char_count + len(content) > max_chars:
+            break
+        context += content + "\n"
+        char_count += len(content)
+
+    return context

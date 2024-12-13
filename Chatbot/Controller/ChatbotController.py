@@ -1,10 +1,13 @@
 import os
-from fastapi import HTTPException, APIRouter
+from fastapi import UploadFile, File, HTTPException, APIRouter
+import shutil
 from typing import List
+from pyparsing import empty
 from starlette.responses import JSONResponse
 from Chatbot.ChatbotService import generate_response,process_pdf
-from Chatbot.Model import FilePath,QueryResponse
+from Chatbot.Model import QueryResponse
 from Chatbot.ChatbotService.vectordbHandlingService import create_search_index
+from Chatbot.utils.database import collection
 # Create an APIRouter instance for routes
 router = APIRouter()
 
@@ -25,27 +28,34 @@ async def query(query: QueryResponse):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 @router.post("/user/upload_pdf/")
-async def upload_pdf(filepaths: List[FilePath]):
-        results = []
-        for filepath in filepaths:
-            file_path_str = str(filepath.filePath)
-            if not os.path.exists(file_path_str):
-                raise HTTPException(status_code=400, detail=f"File path {filepath.filePath} does not exist")
+async def upload_pdf(files: List[UploadFile] = File(...)):
+    results = []
+    upload_folder = "./uploaded_pdfs"
+    os.makedirs(upload_folder, exist_ok=True)
 
-            if not filepath.filePath.endswith(".pdf"):
-                raise HTTPException(status_code=400, detail=f"{filepath.filePath} is not a PDF file")
+    for file in files:
+        if not file.filename.endswith(".pdf"):
+            results.append({"file": file.filename, "status": "Error: Not a PDF file"})
+            continue
 
-            try:
-                process_pdf(file_path_str)
+        try:
+            # Save the uploaded file
+            file_path = os.path.join(upload_folder, file.filename)
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+
+            # Process the PDF
+            process_pdf(file_path)
+            if collection.count_documents({}) is empty:
                 create_search_index()
-                results.append({"file": filepath.filePath, "status": "Processed successfully"})
 
-            except Exception as e:
-                results.append({"file": filepath.filePath, "status": f"Error: {str(e)}"})
+            results.append({"file": file.filename, "status": "Processed successfully"})
+        except Exception as e:
+            results.append({"file": file.filename, "status": f"Error: {str(e)}"})
 
-        return JSONResponse(
-            status_code=200,
-            content={"results": results}
-        )
+    return JSONResponse(
+        status_code=200,
+        content={"results": results}
+    )
 
 

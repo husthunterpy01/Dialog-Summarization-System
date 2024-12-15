@@ -10,7 +10,6 @@ def save_embeddings_to_db(documents):
         print("No documents to save.")
 
 
-
 def create_search_index():
     index_name="vector_index"
     search_index_model = SearchIndexModel(

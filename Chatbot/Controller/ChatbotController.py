@@ -1,4 +1,6 @@
 import os
+
+from dotenv import load_dotenv
 from fastapi import UploadFile, File, HTTPException, APIRouter
 import shutil
 from typing import List
@@ -7,7 +9,12 @@ from starlette.responses import JSONResponse
 from Chatbot.ChatbotService import generate_response,process_pdf
 from Chatbot.Model import QueryResponse
 from Chatbot.ChatbotService.vectordbHandlingService import create_search_index
-from Chatbot.utils.database import collection
+from Chatbot.utils.database import collection, MongoDBClient
+
+load_dotenv()
+db_name = os.getenv("VECTOR_DB")
+collection_name = os.getenv("VECTOR_DOCUMENT")
+
 # Create an APIRouter instance for routes
 router = APIRouter()
 
@@ -46,7 +53,8 @@ async def upload_pdf(files: List[UploadFile] = File(...)):
 
             # Process the PDF
             process_pdf(file_path)
-            if collection.count_documents({}) is empty:
+
+            if not MongoDBClient.list_search_indexes_checked(db_name, collection_name):
                 create_search_index()
 
             results.append({"file": file.filename, "status": "Processed successfully"})

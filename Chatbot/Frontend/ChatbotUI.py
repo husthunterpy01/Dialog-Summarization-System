@@ -14,8 +14,8 @@ uploaded_files = st.file_uploader("Choose PDF files to upload", accept_multiple_
 
 if st.button("Upload PDFs"):
     if uploaded_files:
-        filepaths = [{"filePath": f"/path/to/pdf/{file.name}"} for file in uploaded_files]
-        response = requests.post(f"{BASE_URL}/api/user/upload_pdf/", json=filepaths)
+        files = [("files", (file.name, file, file.type)) for file in uploaded_files]
+        response = requests.post(f"{BASE_URL}/api/user/upload_pdf/", files=files)
 
         if response.status_code == 200:
             results = response.json().get("results", [])

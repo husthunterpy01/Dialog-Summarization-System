@@ -25,8 +25,8 @@ def generate_response(user_query):
 
     # Build the response string
     response = "Here's what I found from the database:\n"
-    response += llm_response  # Append LLM response
-
+    #response += llm_response  # Append LLM response
+    response += context
     return response
 
 

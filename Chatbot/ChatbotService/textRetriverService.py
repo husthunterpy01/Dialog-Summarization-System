@@ -91,7 +91,7 @@ def remove_footer_box_from_pdf(file_path, footer_height=80, box_padding=10):
 def process_pdf(file):
     remove_footer_box_from_pdf(file)
     text_extracted = extract_text_from_pdf(file)
-    text_chunks = convert_text_to_chunk(text_extracted, chunk_size=1000, chunk_overlap=300)
+    text_chunks = convert_text_to_chunk(text_extracted, chunk_size=200, chunk_overlap=30)
 
     text_chunks = [validate_and_truncate_text(chunk) for chunk in text_chunks]
 

@@ -15,7 +15,7 @@ def generate_response(user_query):
     query_embedding = query_embedding.flatten().tolist()
 
     # Search the database for relevant document embeddings
-    search_results = get_query_results(query_embedding)
+    search_results = get_query_results(query_embedding,user_query)
 
     context = truncate_search_results(search_results)
     prompt = f"Context: {context}\n\nQuestion: {user_query}\nAnswer:"
@@ -25,8 +25,7 @@ def generate_response(user_query):
 
     # Build the response string
     response = "Here's what I found from the database:\n"
-    #response += llm_response  # Append LLM response
-    response += context
+    response += llm_response  # Append LLM response
     return response
 
 

@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from pymongo.operations import SearchIndexModel
 from Chatbot.utils.database import collection
-
+from Chatbot.utils.weightRepicoralCalc_utils import weighted_reciprocal_rank
 load_dotenv()
 def save_embeddings_to_db(documents):
     if documents:
@@ -52,122 +52,59 @@ def create_search_index():
             print(f"Error while creating search index: {e}")
 
 def get_query_results(query_embedding,user_query):
-    vectorWeight = 0.1
-    fullTextWeight = 0.9
-    pipeline = [
-          {
-                "$vectorSearch": {
-                  "index": "vector_index",
-                  "queryVector": query_embedding,
-                  "path": "embedding",
-                  "numCandidates":18,
+    # Vector Search
+    vector_pipeline = [
+        {
+            "$vectorSearch": {
+                "index": "vector_index",
+                "queryVector": query_embedding,
+                "path": "embedding",
+                "numCandidates":18,
+                "limit": 5
+            }
+        }, {
+            "$project": {
+                "_id": 1,
+                "content": 1,
+                "score":{"$meta":"vectorSearchScore"}
+            }
+        }
+    ]
+
+    vector_results = collection.aggregate(vector_pipeline)
+    x = list(vector_results)
+
+    search_pipeline = [
+        {
+            "$search": {
+                "index": "search_index",
+                "text": {
+                    "query": user_query,
+                    "path": "content"
                 }
-          },
-          {
-              "$group": {
-                  "_id": None,
-                  "docs": {"$push": "$$ROOT"}
-              }
-          }, {
-              "$unwind": {
-                  "path": "$docs",
-                  "includeArrayIndex": "rank"
-              }
-          }, {
-              "$addFields": {
-                  "vs_score": {
-                      "$multiply": [
-                          vectorWeight, {
-                              "$divide": [
-                                  1.0, {
-                                      "$add": ["$rank", 60]
-                                  }
-                              ]
-                          }
-                      ]
-                  }
-              }
-          }, {
-              "$project": {
-                  "vs_score": 1,
-                  "_id": "$docs._id",
-                  "content": "$docs.content"
-              }
-          }, {
-              "$unionWith": {
-                  "coll": os.getenv("VECTOR_DOCUMENT"),
-                  "pipeline": [
-                      {
-                          "$search": {
-                              "index": "search_index",
-                              "phrase": {
-                                  "query": user_query,
-                                  "path": "content"
-                              }
-                          }
-                      }, {
-                          "$limit": 20
-                      }, {
-                          "$group": {
-                              "_id": None,
-                              "docs": {"$push": "$$ROOT"}
-                          }
-                      }, {
-                          "$unwind": {
-                              "path": "$docs",
-                              "includeArrayIndex": "rank"
-                          }
-                      }, {
-                          "$addFields": {
-                              "fts_score": {
-                                  "$multiply": [
-                                      fullTextWeight, {
-                                          "$divide": [
-                                              1.0, {
-                                                  "$add": ["$rank", 60]
-                                              }
-                                          ]
-                                      }
-                                  ]
-                              }
-                          }
-                      },
-                      {
-                          "$project": {
-                              "fts_score": 1,
-                              "_id": "$docs._id",
-                              "title": "$docs.title"
-                          }
-                      }
-                  ]
-              }
-          }, {
-              "$group": {
-                  "_id": "$title",
-                  "vs_score": {"$max": "$vs_score"},
-                  "fts_score": {"$max": "$fts_score"}
-              }
-          }, {
-              "$project": {
-                  "_id": 1,
-                  "content": 1,
-                  "vs_score": {"$ifNull": ["$vs_score", 0]},
-                  "fts_score": {"$ifNull": ["$fts_score", 0]}
-              }
-          }, {
-              "$project": {
-                  "score": {"$add": ["$fts_score", "$vs_score"]},
-                  "_id": 1,
-                  "content": 1,
-                  "vs_score": 1,
-                  "fts_score": 1
-              }
-          },
-          {"$sort": {"score": -1}},
-          {"$limit": 10}
-      ]
-    results = collection.aggregate(pipeline)
-    array_of_results = []
-    for doc in results:
-        array_of_results.append(doc)
-    return array_of_results
+            }
+        },
+        {
+            "$addFields": {
+                "score": {"$meta": "searchScore"}
+            }
+        },
+        {
+            "$limit": 5
+        }
+    ]
+
+    text_results = collection.aggregate(search_pipeline)
+    y = list(text_results)
+
+    doc_lists = [x,y]
+
+    for i in range(len(doc_lists)):
+        doc_lists[i] = [
+            {"_id":str(doc["_id"]),"content":doc["content"], "score":doc["score"]}
+            for doc in doc_lists[i]
+        ]
+
+    fused_documents = weighted_reciprocal_rank(doc_lists)
+
+    return fused_documents

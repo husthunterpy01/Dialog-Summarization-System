@@ -31,7 +31,6 @@ def create_vectorsearch_index():
     collection.create_search_index(model=search_index_model)
 
 def create_search_index():
-        try:
             search_model = SearchIndexModel(
                 name="search_index",
                 type="search",
@@ -48,10 +47,8 @@ def create_search_index():
             )
             collection.create_search_index(model=search_model)
             print("Search index created successfully.")
-        except Exception as e:
-            print(f"Error while creating search index: {e}")
 
-def get_query_results(query_embedding,user_query):
+def get_query_results(query_embedding,user_query, num_candidates=18, top_k=5):
     # Vector Search
     vector_pipeline = [
         {
@@ -59,8 +56,8 @@ def get_query_results(query_embedding,user_query):
                 "index": "vector_index",
                 "queryVector": query_embedding,
                 "path": "embedding",
-                "numCandidates":18,
-                "limit": 5
+                "numCandidates":num_candidates,
+                "limit": top_k
             }
         }, {
             "$project": {
@@ -90,7 +87,7 @@ def get_query_results(query_embedding,user_query):
             }
         },
         {
-            "$limit": 5
+            "$limit": top_k
         }
     ]
 

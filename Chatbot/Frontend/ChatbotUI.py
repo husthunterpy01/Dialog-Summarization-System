@@ -1,3 +1,5 @@
+import time
+
 from dotenv import load_dotenv
 import streamlit as st
 import requests
@@ -17,6 +19,7 @@ if "chat_sessions" not in st.session_state:
 if "current_session" not in st.session_state:
     st.session_state.current_session = None  # Tracks the current active session
 
+
 # Helper function to start a new session
 def start_new_session():
     session_id = f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
@@ -27,7 +30,9 @@ def start_new_session():
 st.sidebar.title("Chat Sessions")
 if st.sidebar.button("Start New Session"):
     start_new_session()
-    st.sidebar.success(f"New session started: {st.session_state.current_session}")
+    successMess = st.success(f"New session started: {st.session_state.current_session}")
+    time.sleep(3)
+    successMess.empty()
 
 # Display existing sessions in the sidebar
 existing_sessions = list(st.session_state.chat_sessions.keys())
@@ -58,57 +63,64 @@ with st.sidebar.expander("Upload PDF File", expanded=False):
             else:
                 st.sidebar.error(f"Failed to upload PDF: {response.text}")
 
-# Query Section
-st.header("Ask a Question")
-user_query = st.text_input("Enter your question")
-
-if st.button("Submit Query"):
-    if user_query:
-        payload = {"queryResponse": user_query}
-        response = requests.post(f"{BASE_URL}/api/user/query/", json=payload)
-
-        if response.status_code == 200:
-            chatbot_response = response.json().get("response", "No response received")
-
-            # Save the interaction in the current session
-            if st.session_state.current_session:
-                st.session_state.chat_sessions[st.session_state.current_session].append(
-                    {"user": user_query, "bot": chatbot_response}
-                )
-
-            st.success(f"Chatbot Response: {chatbot_response}")
-        else:
-            st.error(f"Failed to fetch response: {response.text}")
-
-# Display Chat History
-st.header("Chat History")
-if st.session_state.current_session:
-    chat_history = st.session_state.chat_sessions[st.session_state.current_session]
-    if chat_history:
-        for message in chat_history:
-            st.write(f"**You:** {message['user']}")
-            st.write(f"**Bot:** {message['bot']}")
-    else:
-        st.info("No chat history for this session.")
-
 # Save Current Session to a File
-if st.button("Save Current Session"):
+if st.sidebar.button("Save Current Session"):
     if st.session_state.current_session:
-        session_data = st.session_state.chat_sessions[st.session_state.current_session]
+        session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
         if session_data:
             session_file_name = f"{st.session_state.current_session}.json"
             with open(session_file_name, "w") as f:
                 json.dump(session_data, f, indent=4)
 
             # Provide download link for the file
+            successMess = st.success(f"Chat session saved to {session_file_name}. You can download below.")
+            time.sleep(3)
+            successMess.empty()
+
             st.download_button(
                 label="Download Session Chat Log",
                 data=json.dumps(session_data, indent=4),
                 file_name=session_file_name,
                 mime="application/json",
             )
-            st.success(f"Chat session saved to {session_file_name}.")
         else:
-            st.warning("No chat history to save.")
+            warnMess = st.warning("No chat history to save.")
+            time.sleep(3)
+            warnMess.empty()
     else:
-        st.error("No active session to save.")
+        errorMess = st.error("No active session to save.")
+        time.sleep(3)
+        errorMess.empty()
+
+
+# Chatbot interaction session
+# Redisplay chat history for the current session
+if st.session_state.current_session and st.session_state.current_session in st.session_state.chat_sessions:
+    st.header("Ask a Question")
+    for message in st.session_state.chat_sessions[st.session_state.current_session]:
+        if message["role"] == "user":
+            with st.chat_message("user"):
+                st.markdown(message["response"])
+        elif message["role"] == "chatbot":
+            with st.chat_message("assistant"):
+                st.markdown(message["response"])
+
+st.header("Ask a Question")
+user_query = st.chat_input("Enter your question", key="user_input")
+if user_query:
+    # Add the user query to the side
+    with st.chat_message("user"):
+        st.markdown(user_query)
+    payload = {"queryResponse": user_query}
+    response = requests.post(f"{BASE_URL}/api/user/query/", json=payload)
+    if response.status_code == 200:
+        chatbot_response = response.json().get("response", "No response received")
+        with st.chat_message("assistant"):
+            st.markdown(chatbot_response)
+
+        # Save the interaction in the current session (.json saving)
+        if st.session_state.current_session:
+            st.session_state.chat_sessions[st.session_state.current_session].append({"role": "user", "response": user_query})
+            st.session_state.chat_sessions[st.session_state.current_session].append({"role": "chatbot", "response":chatbot_response })
+
+

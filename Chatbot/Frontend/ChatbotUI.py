@@ -1,24 +1,26 @@
 import time
-
 from dotenv import load_dotenv
 import streamlit as st
 import requests
 import json
 import os
 from datetime import datetime
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 # Load environment variables
 load_dotenv()
 
 # FastAPI endpoint base URL
 BASE_URL = os.getenv("CHAT_ENDPOINT")  # Replace with your actual FastAPI server URL
-
+# Load the fine-tuned model
+FINE_TUNE_MODEL = os.getenv("FINE_TUNE_MODEL")
+tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL)
+model = AutoModelForSeq2SeqLM.from_pretrained(FINE_TUNE_MODEL)
 # Initialization
 if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {}  # Stores all sessions and their chat history
 if "current_session" not in st.session_state:
     st.session_state.current_session = None  # Tracks the current active session
-
 
 # Helper function to start a new session
 def start_new_session():
@@ -63,6 +65,28 @@ with st.sidebar.expander("Upload PDF File", expanded=False):
             else:
                 st.sidebar.error(f"Failed to upload PDF: {response.text}")
 
+
+# Summarize session
+def generate_summary(text):
+    inputs = tokenizer(text, return_tensors="pt", truncation=True)
+    summary_ids = model.generate(
+        inputs["input_ids"], max_length=100, min_length=25, num_beams=4, early_stopping=True
+    )
+    return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+if st.sidebar.button("Summarize Current Session"):
+    # Extract user messages to summarize
+    session_data = st.session_state.chat_sessions[st.session_state.current_session]
+    chat_history = " ".join([msg["response"] for msg in session_data if msg["role"] == "user"])
+
+    if chat_history:
+        with st.spinner("Generating summary..."):
+            st.session_state.summary = generate_summary(chat_history)
+            st.subheader("Summary of the Session")
+            st.write(st.session_state.summary)
+    else:
+        st.warning("No user messages to summarize.")
+
 # Save Current Session to a File
 if st.sidebar.button("Save Current Session"):
     if st.session_state.current_session:
@@ -105,7 +129,8 @@ if st.session_state.current_session and st.session_state.current_session in st.s
             with st.chat_message("assistant"):
                 st.markdown(message["response"])
 
-st.header("Ask a Question")
+
+#Chat area
 user_query = st.chat_input("Enter your question", key="user_input")
 if user_query:
     # Add the user query to the side
@@ -122,5 +147,7 @@ if user_query:
         if st.session_state.current_session:
             st.session_state.chat_sessions[st.session_state.current_session].append({"role": "user", "response": user_query})
             st.session_state.chat_sessions[st.session_state.current_session].append({"role": "chatbot", "response":chatbot_response })
+
+
 
 

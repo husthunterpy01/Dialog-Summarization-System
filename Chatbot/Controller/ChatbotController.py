@@ -69,7 +69,7 @@ async def upload_pdf(files: List[UploadFile] = File(...)):
         content={"results": results}
     )
 
-@router.post("user/summarizeChat/{session_id}")
+@router.post("/user/summarizeChat/{session_id}")
 async def summarizeChatSession(session_id: str, sessionHistoryLog: str):
     response = []
     try:
@@ -83,28 +83,28 @@ async def summarizeChatSession(session_id: str, sessionHistoryLog: str):
         content={"response": response}
     )
 
-@router.post("user/saveChatHistoryBySession/{session_id}")
+@router.post("/user/saveChatHistoryBySession/{session_id}")
 async def saveChatHistoryBySession(session_id: str, sessionHistory: Chatlog):
     response = []
     try:
         saveChatConversation(session_id, sessionHistory)
         response.append({"session_id":session_id, "status":"Save session successfully"})
     except Exception as e:
-        response.append({"session_id":session_id, "status":"Save session fail"})
+        raise HTTPException(status_code=500, detail=f"Error saving chatlog: {str(e)}")
 
     return JSONResponse(
         status_code=200,
         content={"response": response}
     )
 
-@router.post("user/saveChatSummaryBySession/{session_id}")
+@router.post("/user/saveChatSummaryBySession/{session_id}")
 async def saveChatSummaryBySession(session_id: str, savedChatSummary: ChatSummarizeSession):
     response = []
     try:
         saveSummaryBySession(session_id, savedChatSummary)
         response.append({"session_id":session_id, "status":"Save summary session successfully"})
     except Exception as e:
-        response.append({"session_id":session_id, "status":"Save summary session fail"})
+        raise HTTPException(status_code=500, detail=f"Save summary session fail: {str(e)}")
 
     return JSONResponse(
         status_code=200,

@@ -16,6 +16,7 @@ BASE_URL = os.getenv("CHAT_ENDPOINT")  # Replace with your actual FastAPI server
 FINE_TUNE_MODEL = os.getenv("FINE_TUNE_MODEL")
 tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL)
 model = AutoModelForSeq2SeqLM.from_pretrained(FINE_TUNE_MODEL)
+
 # Initialization
 if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {}  # Stores all sessions and their chat history
@@ -66,7 +67,7 @@ with st.sidebar.expander("Upload PDF File", expanded=False):
                 st.sidebar.error(f"Failed to upload PDF: {response.text}")
 
 
-# Summarize session
+# Summarize current chat session and save to mongodb
 def generate_summary(text):
     inputs = tokenizer(text, return_tensors="pt", truncation=True)
     summary_ids = model.generate(
@@ -77,8 +78,9 @@ def generate_summary(text):
 if st.sidebar.button("Summarize Current Session"):
     # Extract user messages to summarize
     session_data = st.session_state.chat_sessions[st.session_state.current_session]
-    chat_history = " ".join([msg["response"] for msg in session_data if msg["role"] == "user"])
 
+    # Concatenate user and chatbot messages with proper formatting
+    chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['response']}" for msg in session_data])
     if chat_history:
         with st.spinner("Generating summary..."):
             st.session_state.summary = generate_summary(chat_history)
@@ -87,7 +89,7 @@ if st.sidebar.button("Summarize Current Session"):
     else:
         st.warning("No user messages to summarize.")
 
-# Save Current Session to a File
+# Save Current Chat Session to a File and Mongodb
 if st.sidebar.button("Save Current Session"):
     if st.session_state.current_session:
         session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
@@ -96,17 +98,17 @@ if st.sidebar.button("Save Current Session"):
             with open(session_file_name, "w") as f:
                 json.dump(session_data, f, indent=4)
 
-            # Provide download link for the file
-            successMess = st.success(f"Chat session saved to {session_file_name}. You can download below.")
-            time.sleep(3)
-            successMess.empty()
-
-            st.download_button(
-                label="Download Session Chat Log",
-                data=json.dumps(session_data, indent=4),
-                file_name=session_file_name,
-                mime="application/json",
+            # Save to mongodb
+            session_id = st.session_state.current_session
+            response = requests.post(
+                f"{BASE_URL}/api/user/saveChatHistoryBySession/{session_id}",
+                json={"message": session_data}
             )
+            if response.status_code == 200:
+                st.success("Chat session saved successfully to FastAPI.")
+            else:
+                st.error(f"Failed to save chat session. Error: {response.text}")
+
         else:
             warnMess = st.warning("No chat history to save.")
             time.sleep(3)

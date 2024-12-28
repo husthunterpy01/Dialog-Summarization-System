@@ -1,9 +1,7 @@
-import os
-from dotenv import load_dotenv
 from pymongo.operations import SearchIndexModel
 from Chatbot.utils.database import collection
 from Chatbot.utils.weightRepicoralCalc_utils import weighted_reciprocal_rank
-load_dotenv()
+
 def save_embeddings_to_db(documents):
     if documents:
         collection.insert_many(documents)

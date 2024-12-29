@@ -29,22 +29,22 @@ def create_vectorsearch_index():
     collection.create_search_index(model=search_index_model)
 
 def create_search_index():
-            search_model = SearchIndexModel(
-                name="search_index",
-                type="search",
-                definition={
-                    "mappings": {
-                        "dynamic": False,
-                        "fields": {
-                            "content": {
-                                "type": "string"
-                            }
-                        }
+    search_model = SearchIndexModel(
+        name="search_index",
+        type="search",
+        definition={
+            "mappings": {
+                "dynamic": False,
+                "fields": {
+                    "content": {
+                        "type": "string"
                     }
                 }
-            )
-            collection.create_search_index(model=search_model)
-            print("Search index created successfully.")
+            }
+        }
+    )
+    collection.create_search_index(model=search_model)
+    print("Search index created successfully.")
 
 def get_query_results(query_embedding,user_query, num_candidates=18, top_k=5):
     # Vector Search

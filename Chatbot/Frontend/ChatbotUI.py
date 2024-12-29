@@ -68,82 +68,76 @@ with st.sidebar.expander("Upload PDF File", expanded=False):
 
 
 # Summarize current chat session and save to mongodb
-def generate_summary(text):
-    inputs = tokenizer(text, return_tensors="pt", truncation=True)
-    summary_ids = model.generate(
-        inputs["input_ids"], max_length=100, min_length=25, num_beams=4, early_stopping=True
-    )
-    return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+if st.session_state.current_session:
+    if st.sidebar.button("Summarize Current Session"):
+        # Extract user messages to summarize
+        session_data = st.session_state.chat_sessions[st.session_state.current_session]
+        filtered_history = [
+            msg for msg in session_data
+            if not msg["response"].startswith("Here's the summary of our session:")
+        ]
+        chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['response']}" for msg in filtered_history])
+        if chat_history:
+            session_id = st.session_state.current_session
 
-
-if st.sidebar.button("Summarize Current Session"):
-    # Extract user messages to summarize
-    session_data = st.session_state.chat_sessions[st.session_state.current_session]
-    filtered_history = [
-        msg for msg in session_data
-        if not msg["response"].startswith("Here's the summary of our session:")
-    ]
-    chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['response']}" for msg in filtered_history])
-    if chat_history:
-        session_id = st.session_state.current_session
-
-        # Call the FastAPI endpoint to summarize the chat
-        response_summary = requests.post(
-            f"{BASE_URL}/api/user/summarizeChat/{session_id}",
-            json={"sessionHistoryLog": chat_history}  # Send the history log as JSON
-        )
-
-        if response_summary.status_code == 200:
-            # Extract the summary from the response
-            summary = response_summary.json().get("summary", "No summary returned")
-            st.session_state.summary = summary
-
-            # Append the summary as a chatbot response
-            st.session_state.chat_sessions[st.session_state.current_session].append(
-                {"role": "chatbot", "response": f"Here's the summary of our session:\n{summary}"}
+            # Call the FastAPI endpoint to summarize the chat
+            response_summary = requests.post(
+                f"{BASE_URL}/api/user/summarizeChat/{session_id}",
+                json={"sessionHistoryLog": chat_history}  # Send the history log as JSON
             )
-            # Save the summary to session_id mongodb
-            response_savedSummary = requests.post(
-                f"{BASE_URL}/api/user/saveChatSummaryBySession/{session_id}",
-                json={"summary": summary}
-            )
-            if response_savedSummary.status_code == 200:
-                st.success("Chat session saved successfully to FastAPI.")
+
+            if response_summary.status_code == 200:
+                # Extract the summary from the response
+                summary = response_summary.json().get("summary", "No summary returned")
+                st.session_state.summary = summary
+
+                # Append the summary as a chatbot response
+                st.session_state.chat_sessions[st.session_state.current_session].append(
+                    {"role": "chatbot", "response": f"Here's the summary of our session:\n{summary}"}
+                )
+                # Save the summary to session_id mongodb
+                response_savedSummary = requests.post(
+                    f"{BASE_URL}/api/user/saveChatSummaryBySession/{session_id}",
+                    json={"summary": summary}
+                )
+                if response_savedSummary.status_code == 200:
+                    st.success("Chat session saved successfully to FastAPI.")
+                else:
+                    st.error(f"Failed to save chat session. Error: {response.text}")
             else:
-                st.error(f"Failed to save chat session. Error: {response.text}")
+                st.error(f"Failed to generate summary. Error: {response_summary.text}")
         else:
-            st.error(f"Failed to generate summary. Error: {response_summary.text}")
-    else:
-        st.warning("No user messages to summarize.")
+            st.warning("No user messages to summarize.")
 
 # Save Current Chat Session to a File and Mongodb
-if st.sidebar.button("Save Current Session"):
-    if st.session_state.current_session:
-        session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
-        if session_data:
-            session_file_name = f"{st.session_state.current_session}.json"
-            with open(session_file_name, "w") as f:
-                json.dump(session_data, f, indent=4)
+if st.session_state.current_session:
+    if st.sidebar.button("Save Current Session"):
+        if st.session_state.current_session:
+            session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
+            if session_data:
+                session_file_name = f"{st.session_state.current_session}.json"
+                with open(session_file_name, "w") as f:
+                    json.dump(session_data, f, indent=4)
 
-            # Save to mongodb
-            session_id = st.session_state.current_session
-            response = requests.post(
-                f"{BASE_URL}/api/user/saveChatHistoryBySession/{session_id}",
-                json={"message": session_data}
-            )
-            if response.status_code == 200:
-                st.success("Chat session saved successfully to FastAPI.")
+                # Save to mongodb
+                session_id = st.session_state.current_session
+                response = requests.post(
+                    f"{BASE_URL}/api/user/saveChatHistoryBySession/{session_id}",
+                    json={"message": session_data}
+                )
+                if response.status_code == 200:
+                    st.success("Chat session saved successfully to FastAPI.")
+                else:
+                    st.error(f"Failed to save chat session. Error: {response.text}")
+
             else:
-                st.error(f"Failed to save chat session. Error: {response.text}")
-
+                warnMess = st.warning("No chat history to save.")
+                time.sleep(3)
+                warnMess.empty()
         else:
-            warnMess = st.warning("No chat history to save.")
+            errorMess = st.error("No active session to save.")
             time.sleep(3)
-            warnMess.empty()
-    else:
-        errorMess = st.error("No active session to save.")
-        time.sleep(3)
-        errorMess.empty()
+            errorMess.empty()
 
 
 # Chatbot interaction session
@@ -165,7 +159,13 @@ if user_query:
     # Add the user query to the side
     with st.chat_message("user"):
         st.markdown(user_query)
-    payload = {"queryResponse": user_query}
+
+    if "summary" in st.session_state and st.session_state.summary:
+        summary_context = st.session_state.summary
+        payload = {"queryResponse": user_query, "summary_context": summary_context}
+    else:
+        payload = {"queryResponse": user_query}
+
     response = requests.post(f"{BASE_URL}/api/user/query/", json=payload)
     if response.status_code == 200:
         chatbot_response = response.json().get("response", "No response received")

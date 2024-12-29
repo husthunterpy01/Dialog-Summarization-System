@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build:
+      context: .
+      target: fastapi
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - streamlit
+
+  streamlit:
+    build:
+      context: .
+      target: streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app

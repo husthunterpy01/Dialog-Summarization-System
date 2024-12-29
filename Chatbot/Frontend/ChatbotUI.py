@@ -75,17 +75,34 @@ def generate_summary(text):
     )
     return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
+
 if st.sidebar.button("Summarize Current Session"):
     # Extract user messages to summarize
     session_data = st.session_state.chat_sessions[st.session_state.current_session]
-
-    # Concatenate user and chatbot messages with proper formatting
-    chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['response']}" for msg in session_data])
+    filtered_history = [
+        msg for msg in session_data if not msg["response"].startswith("Here's the summary of our session:")
+    ]
+    chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['response']}" for msg in filtered_history])
     if chat_history:
         with st.spinner("Generating summary..."):
-            st.session_state.summary = generate_summary(chat_history)
-            st.subheader("Summary of the Session")
-            st.write(st.session_state.summary)
+            summary = generate_summary(chat_history)
+            st.session_state.summary = summary
+
+            # Append the new summary as a chatbot response
+            st.session_state.chat_sessions[st.session_state.current_session].append(
+                {"role": "chatbot", "response": f"Here's the summary of our session:\n{summary}"}
+            )
+            # Save the summary to session_id mongodb
+            session_id = st.session_state.current_session
+            response_savedSummary = requests.post(
+                f"{BASE_URL}/api/user/saveChatSummaryBySession/{session_id}",
+                json={"summary": summary}
+            )
+            if response_savedSummary.status_code == 200:
+                st.success("Chat session saved successfully to FastAPI.")
+            else:
+                st.error(f"Failed to save chat session. Error: {response.text}")
+
     else:
         st.warning("No user messages to summarize.")
 

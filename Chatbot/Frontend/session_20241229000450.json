@@ -1,0 +1,42 @@
+[
+    {
+        "role": "user",
+        "response": "Who is Tobias ?"
+    },
+    {
+        "role": "chatbot",
+        "response": "Here's what I found from the database:\nTobias Dahlkvist is a scholar in intellectual history at Stockholm University. He is the author of this book about Giacomo Leopardi."
+    },
+    {
+        "role": "user",
+        "response": "What are you doing ?"
+    },
+    {
+        "role": "chatbot",
+        "response": "Here's what I found from the database:\nI am taking care of our guests. I am providing them with a positive experience. I am ensuring that they feel welcome and valued. I am taking the time to speak to them and make eye contact. I am going the extra mile to make sure they have a great experience. I am being attentive, friendly and helpful. I am going above and beyond to meet their needs. I am being proactive and responsive to their needs. I am showing them that I care about them and that I am invested in their experience."
+    },
+    {
+        "role": "user",
+        "response": "What would the author do ?"
+    },
+    {
+        "role": "chatbot",
+        "response": "Here's what I found from the database:\nThe author seems to be questioning the idea of a man of action with a will to power. The author seems to be looking for a way to take action in order to make a change. The author is likely to try to find a way to express their ideas and thoughts in a creative and persuasive way. The author may also be looking for ways to connect with others and build relationships in order to make a positive impact."
+    },
+    {
+        "role": "user",
+        "response": "j"
+    },
+    {
+        "role": "chatbot",
+        "response": "Here's what I found from the database:\ns"
+    },
+    {
+        "role": "user",
+        "response": "Who is the shinning sword ?"
+    },
+    {
+        "role": "chatbot",
+        "response": "Here's what I found from the database:\nNone of the above, The shining sword is actually the title of the book 'The Shining Sword' by Vilhelm Ekelund. However, according to the context, the book is actually called \"Leopardi's Shadow in Sweden\" or \"Skuggan\" in Swedish, which means both 'shade' and 'shadow'. Hence, the correct answer is the book title \"Skuggan\"."
+    }
+]

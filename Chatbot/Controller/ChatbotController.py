@@ -1,5 +1,6 @@
 import os
 import shutil
+import json
 from dotenv import load_dotenv
 from fastapi import UploadFile, File, HTTPException, APIRouter
 from typing import List
@@ -8,6 +9,7 @@ from Chatbot.ChatbotService import generate_response,process_pdf
 from Chatbot.Model import QueryResponse
 from Chatbot.ChatbotService.vectordbHandlingService import create_vectorsearch_index,create_search_index
 from Chatbot.utils.database import MongoDBClient
+from Chatbot.Model.ChatSummarizationRequest import SummarizeChatRequest
 from Chatbot.Model.ChatLog import Chatlog
 from Chatbot.Model.ChatSummarySession import ChatSummarizeSession
 from Chatbot.ChatbotService.chatlogService import saveChatConversation, saveSummaryBySession,createSessionIdIndex
@@ -26,9 +28,9 @@ async def root():
     return {"message": "Welcome to the Chatbot API"}
 
 @router.post("/user/query/")
-async def query(query: QueryResponse):
+async def query(userprompt: QueryResponse):
     try:
-        response = generate_response(query.queryResponse)
+        response = generate_response(userprompt.queryResponse, userprompt.sumContext)
         return JSONResponse(
             status_code=200,
             content={"response": response}
@@ -70,18 +72,25 @@ async def upload_pdf(files: List[UploadFile] = File(...)):
     )
 
 @router.post("/user/summarizeChat/{session_id}")
-async def summarizeChatSession(session_id: str, sessionHistoryLog: str):
-    response = []
+async def summarizeChatSession(session_id: str, request: SummarizeChatRequest):
     try:
-        generate_summary(sessionHistoryLog)
-        response.append({"session_id":session_id, "status":"Save session successfully"})
-    except Exception as e:
-        response.append({"session_id":session_id, "status":"Save session fail"})
+        # Extract the session history log from the request body
+        session_history_log = request.sessionHistoryLog
 
-    return JSONResponse(
-        status_code=200,
-        content={"response": response}
-    )
+        # Generate the summary using the provided history log
+        summary = generate_summary(session_history_log)
+
+        # Return the summary in the response
+        return JSONResponse(
+            status_code=200,
+            content={
+                "session_id": session_id,
+                "status": "Summarization successful",
+                "summary": summary
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to summarize chat session: {str(e)}")
 
 @router.post("/user/saveChatHistoryBySession/{session_id}")
 async def saveChatHistoryBySession(session_id: str, sessionHistory: Chatlog):

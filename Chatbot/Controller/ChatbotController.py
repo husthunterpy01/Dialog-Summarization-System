@@ -10,8 +10,8 @@ from Chatbot.ChatbotService.vectordbHandlingService import create_vectorsearch_i
 from Chatbot.utils.database import MongoDBClient
 from Chatbot.Model.ChatLog import Chatlog
 from Chatbot.Model.ChatSummarySession import ChatSummarizeSession
-from Chatbot.ChatbotService.chatlogService import saveChatConversation, saveSummaryBySession
-from Chatbot.ChatbotService.chatbotLogSummary import generate_summary
+from Chatbot.ChatbotService.chatlogService import saveChatConversation, saveSummaryBySession,createSessionIdIndex
+from Chatbot.ChatbotService.chatbotLogSummaryService import generate_summary
 
 load_dotenv()
 db_name = os.getenv("VECTOR_DB")
@@ -87,6 +87,7 @@ async def summarizeChatSession(session_id: str, sessionHistoryLog: str):
 async def saveChatHistoryBySession(session_id: str, sessionHistory: Chatlog):
     response = []
     try:
+        createSessionIdIndex()
         saveChatConversation(session_id, sessionHistory)
         response.append({"session_id":session_id, "status":"Save session successfully"})
     except Exception as e:
@@ -101,6 +102,7 @@ async def saveChatHistoryBySession(session_id: str, sessionHistory: Chatlog):
 async def saveChatSummaryBySession(session_id: str, savedChatSummary: ChatSummarizeSession):
     response = []
     try:
+        createSessionIdIndex()
         saveSummaryBySession(session_id, savedChatSummary)
         response.append({"session_id":session_id, "status":"Save summary session successfully"})
     except Exception as e:

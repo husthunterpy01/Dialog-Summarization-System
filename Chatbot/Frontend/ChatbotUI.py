@@ -5,17 +5,12 @@ import requests
 import json
 import os
 from datetime import datetime
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
+import pandas as pd
 # Load environment variables
 load_dotenv()
 
 # FastAPI endpoint base URL
 BASE_URL = os.getenv("CHAT_ENDPOINT")  # Replace with your actual FastAPI server URL
-# Load the fine-tuned model
-FINE_TUNE_MODEL = os.getenv("FINE_TUNE_MODEL")
-tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL)
-model = AutoModelForSeq2SeqLM.from_pretrained(FINE_TUNE_MODEL)
 
 # Initialization
 if "chat_sessions" not in st.session_state:
@@ -76,9 +71,30 @@ if st.session_state.current_session:
             msg for msg in session_data
             if not msg["response"].startswith("Here's the summary of our session:")
         ]
-        chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['response']}" for msg in filtered_history])
+
+        # Format the dialogue text and remove '\n'
+        def clean_response(response):
+            return response.replace("\n", " ")
+
+        chat_history = " ".join([
+            f"{msg['role'].capitalize()}: {clean_response(msg['response'])}"
+            for msg in filtered_history
+        ])
+
         if chat_history:
             session_id = st.session_state.current_session
+
+            # # Prepare the data for CSV
+            # dialogue_data = [{"id": session_id, "dialogue": chat_history}]
+            #
+            # # Save to a CSV file
+            # def save_dialogue_to_csv(data, file_name="chat_dialogue.csv"):
+            #     df = pd.DataFrame(data)
+            #     df.to_csv(file_name, index=False, encoding="utf-8")
+            #     st.sidebar.success(f"Chat dialogue saved to {file_name}")
+            #
+            # # Save the dialogue data
+            # save_dialogue_to_csv(dialogue_data)
 
             # Call the FastAPI endpoint to summarize the chat
             response_summary = requests.post(

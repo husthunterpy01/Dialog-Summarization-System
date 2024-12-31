@@ -17,6 +17,8 @@ if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {}  # Stores all sessions and their chat history
 if "current_session" not in st.session_state:
     st.session_state.current_session = None  # Tracks the current active session
+if "last_summary_index" not in st.session_state:
+    st.session_state.last_summary_index = {}
 
 # Helper function to start a new session
 def start_new_session():
@@ -65,45 +67,53 @@ with st.sidebar.expander("Upload PDF File", expanded=False):
 # Summarize current chat session and save to mongodb
 if st.session_state.current_session:
     if st.sidebar.button("Summarize Current Session"):
-        # Extract user messages to summarize
-        session_data = st.session_state.chat_sessions[st.session_state.current_session]
-        filtered_history = [
-            msg for msg in session_data
-            if not msg["response"].startswith("Here's the summary of our session:")
-        ]
+        session_id = st.session_state.current_session
+        session_data = st.session_state.chat_sessions.get(session_id, [])
 
-        # Format the dialogue text and remove '\n'
+        # Function to extract the center part
+        def extract_center(data):
+            summary_indices = [
+                i for i, msg in enumerate(data)
+                if msg["response"].startswith("Here's the summary of our session:")
+            ]
+
+            if not summary_indices:
+                # No summaries, return the entire session as center
+                return data
+
+            if len(summary_indices) == 1:
+                # One summary, take everything before it as the center
+                return data[:summary_indices[0]]
+
+            # Multiple summaries
+            # Skip consecutive summaries and take everything after the last one
+            last_summary_index = summary_indices[-1]
+            while last_summary_index + 1 < len(data) and data[last_summary_index + 1]["response"].startswith("Here's the summary of our session:"):
+                last_summary_index += 1
+
+            # Return everything after the last block of consecutive summaries
+            return data[last_summary_index + 1:]
+
+        # Extract the center part
+        center_part = extract_center(session_data)
+
+        # Format the center part for summarization
         def clean_response(response):
             return response.replace("\n", " ")
 
         chat_history = " ".join([
             f"{msg['role'].capitalize()}: {clean_response(msg['response'])}"
-            for msg in filtered_history
+            for msg in center_part
         ])
 
         if chat_history:
-            session_id = st.session_state.current_session
-
-            # # Prepare the data for CSV
-            # dialogue_data = [{"id": session_id, "dialogue": chat_history}]
-            #
-            # # Save to a CSV file
-            # def save_dialogue_to_csv(data, file_name="chat_dialogue.csv"):
-            #     df = pd.DataFrame(data)
-            #     df.to_csv(file_name, index=False, encoding="utf-8")
-            #     st.sidebar.success(f"Chat dialogue saved to {file_name}")
-            #
-            # # Save the dialogue data
-            # save_dialogue_to_csv(dialogue_data)
-
             # Call the FastAPI endpoint to summarize the chat
             response_summary = requests.post(
                 f"{BASE_URL}/api/user/summarizeChat/{session_id}",
-                json={"sessionHistoryLog": chat_history}  # Send the history log as JSON
+                json={"sessionHistoryLog": chat_history}  # Send filtered history log as JSON
             )
 
             if response_summary.status_code == 200:
-                # Extract the summary from the response
                 summary = response_summary.json().get("summary", "No summary returned")
                 st.session_state.summary = summary
 
@@ -111,19 +121,26 @@ if st.session_state.current_session:
                 st.session_state.chat_sessions[st.session_state.current_session].append(
                     {"role": "chatbot", "response": f"Here's the summary of our session:\n{summary}"}
                 )
-                # Save the summary to session_id mongodb
-                response_savedSummary = requests.post(
+
+                # Save the index of the last summarized message
+                st.session_state.last_summary_index[session_id] = len(session_data) - 1
+
+                # Save the summary to session_id MongoDB
+                response_saved_summary = requests.post(
                     f"{BASE_URL}/api/user/saveChatSummaryBySession/{session_id}",
                     json={"summary": summary}
                 )
-                if response_savedSummary.status_code == 200:
-                    st.success("Chat session saved successfully to FastAPI.")
+                if response_saved_summary.status_code == 200:
+                    st.success("Chat session summary saved successfully to FastAPI.")
                 else:
-                    st.error(f"Failed to save chat session. Error: {response.text}")
+                    st.error(f"Failed to save chat session. Error: {response_saved_summary.text}")
             else:
                 st.error(f"Failed to generate summary. Error: {response_summary.text}")
         else:
-            st.warning("No user messages to summarize.")
+            st.warning("No new messages to summarize.")
+
+
+
 
 # Save Current Chat Session to a File and Mongodb
 if st.session_state.current_session:

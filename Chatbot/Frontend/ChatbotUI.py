@@ -50,19 +50,33 @@ if st.session_state.current_session:
 # Upload PDF Section
 st.sidebar.markdown("---")  # Separator line for clarity
 with st.sidebar.expander("Upload PDF File", expanded=False):
-    uploaded_file = st.file_uploader("Choose a PDF file to upload", accept_multiple_files=True, type=["pdf"])
+    uploaded_files = st.file_uploader(
+        "Choose PDF files to upload", accept_multiple_files=True, type=["pdf"]
+    )
 
     if st.button("Upload PDF", key="upload_pdf_button"):
-        if uploaded_file:
-            files = {"file": (uploaded_file.name, uploaded_file, uploaded_file.type)}
-            response = requests.post(f"{BASE_URL}/api/user/upload_pdf/", files=files)
+        if uploaded_files:
+            for uploaded_file in uploaded_files:
+                files = {"files": (uploaded_file.name, uploaded_file, "application/pdf")}
 
-            if response.status_code == 200:
-                result = response.json().get("result", {})
-                st.sidebar.success(f"{result.get('file', 'File')}: {result.get('status', 'Uploaded successfully')}")
-            else:
-                st.sidebar.error(f"Failed to upload PDF: {response.text}")
+                try:
+                    # Send the POST request
+                    response = requests.post(f"{BASE_URL}/api/user/upload_pdf/", files=files)
 
+                    # Handle the response
+                    if response.status_code == 200:
+                        result = response.json().get("result", {})
+                        st.sidebar.success(
+                            f"{result.get('file', uploaded_file.name)}: {result.get('status', 'Uploaded successfully')}"
+                        )
+                    else:
+                        st.sidebar.error(
+                            f"Failed to upload {uploaded_file.name}: {response.text}"
+                        )
+                except requests.exceptions.RequestException as e:
+                    st.sidebar.error(f"An error occurred: {e}")
+        else:
+            st.sidebar.warning("No files were selected for upload.")
 
 # Summarize current chat session and save to mongodb
 if st.session_state.current_session:

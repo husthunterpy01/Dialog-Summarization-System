@@ -39,4 +39,4 @@ class MongoDBClient:
 
 # Access collections
 collection = MongoDBClient.get_collection(os.getenv("VECTOR_DB"), os.getenv("VECTOR_DOCUMENT"))
-
+conversation_collection = MongoDBClient.get_collection(os.getenv("VECTOR_DB"), os.getenv("VECTOR_CONVERSATION_DOCUMENT"))

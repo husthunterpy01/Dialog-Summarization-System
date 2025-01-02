@@ -9,7 +9,7 @@ def saveChatConversation(sessionId: str, chatSession: Chatlog):
     conversation_collection.update_one(
         {"session_id": sessionId},
         {
-            "$set": {"messages": message_dicts},  #
+            "$set": {"messages": message_dicts},
             "$setOnInsert": {"session_id": sessionId}
         },
         upsert=True

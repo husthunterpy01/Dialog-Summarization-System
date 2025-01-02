@@ -1,9 +1,11 @@
 import os
 import fitz
 import pdfplumber
+import shutil
+import numpy as np
 from Chatbot.ChatbotService.vectordbHandlingService import save_embeddings_to_db
 from Chatbot.utils.embedding_utils import get_embedding, validate_and_truncate_text
-import shutil
+from Chatbot.utils.semanticEmbedding_utils import _split_sentences, _combine_sentences, convert_to_vector, _calculate_cosine_distances
 
 def get_file_name(file_path) -> str:
     file_name_with_extension = os.path.basename(file_path)
@@ -31,24 +33,6 @@ def extract_table_from_pdf(file_path) -> list:
     return tables
 
 
-def convert_text_to_chunk(text, chunk_size: int = 500, chunk_overlap: int = 200):
-    chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunk = text[start:end]
-        if len(chunk.strip()) > 0:
-            chunks.append(chunk)
-        start = end - chunk_overlap
-    return chunks
-
-def chunk_table_data(tables, chunk_size: int = 500, chunk_overlap: int = 200):
-    table_chunks = []
-    for table in tables:
-        table_text = "\n".join([" ".join(map(str, row)) for row in table])
-        table_chunks.extend(convert_text_to_chunk(table_text, chunk_size, chunk_overlap))
-    return table_chunks
-
 def remove_footer_box_from_pdf(file_path, footer_height=80, box_padding=10):
     temp_file = file_path + "_temp.pdf"  # Temporary file path
 
@@ -69,10 +53,10 @@ def remove_footer_box_from_pdf(file_path, footer_height=80, box_padding=10):
         # Get page dimensions
         rect = page.rect  # Full page rectangle
         footer_rect = fitz.Rect(
-            rect.x0 + box_padding,          # Left edge
-            rect.height - footer_height,    # Top edge of footer
-            rect.width - box_padding,       # Right edge
-            rect.height                     # Bottom edge of page
+            rect.x0 + box_padding,  # Left edge
+            rect.height - footer_height,  # Top edge of footer
+            rect.width - box_padding,  # Right edge
+            rect.height  # Bottom edge of page
         )
 
         # Redact (remove) text in the footer rectangle
@@ -87,16 +71,65 @@ def remove_footer_box_from_pdf(file_path, footer_height=80, box_padding=10):
     shutil.move(temp_file, file_path)
 
 
+def chunk_text(text):
+    # Step 1: Split text into sentences
+    single_sentences_list = _split_sentences(text)
+    if not single_sentences_list:  # Handle empty input text
+        print("Error: No sentences found in the input text.")
+        return []
+
+    # Step 2: Combine sentences for context
+    combined_sentences = _combine_sentences(single_sentences_list)
+
+    # Step 3: Generate embeddings
+    embeddings = convert_to_vector(combined_sentences)
+    if embeddings.size == 0:  # Handle empty embeddings
+        print("Error: Failed to generate embeddings.")
+        return []
+
+    # Step 4: Calculate cosine distances
+    distances = _calculate_cosine_distances(embeddings)
+    if not distances:  # Handle empty distances
+        print("Error: No distances calculated.")
+        return []
+
+    # Step 5: Determine breakpoints
+    breakpoint_percentile_threshold = 80
+    breakpoint_distance_threshold = np.percentile(distances, breakpoint_percentile_threshold)
+
+    indices_above_thresh = [i for i, distance in enumerate(distances) if distance > breakpoint_distance_threshold]
+
+    # Step 6: Create chunks based on breakpoints
+    chunks = []
+    start_index = 0
+
+    for index in indices_above_thresh:
+        chunk = ' '.join(single_sentences_list[start_index:index + 1])
+        chunks.append(chunk)
+        start_index = index + 1
+
+    # Add the last chunk if any sentences remain
+    if start_index < len(single_sentences_list):
+        chunk = ' '.join(single_sentences_list[start_index:])
+        chunks.append(chunk)
+
+    return chunks
 
 def process_pdf(file):
     remove_footer_box_from_pdf(file)
-    text_extracted = extract_text_from_pdf(file)
-    text_chunks = convert_text_to_chunk(text_extracted, chunk_size=200, chunk_overlap=30)
 
+    # Extract text from PDF
+    text_extracted = extract_text_from_pdf(file)
+
+    # Perform advanced semantic chunking on the extracted text
+    text_chunks = chunk_text(text_extracted)
+
+    # Validate and truncate each chunk
     text_chunks = [validate_and_truncate_text(chunk) for chunk in text_chunks]
 
+    # Extract and chunk tables
     tables = extract_table_from_pdf(file)
-    table_chunks = chunk_table_data(tables)
+    table_chunks = chunk_text("\n".join([" ".join(map(str, row)) for table in tables for row in table]))
 
     documents = []
     text_embedding = get_embedding(text_chunks)

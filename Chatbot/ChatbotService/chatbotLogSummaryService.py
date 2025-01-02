@@ -8,6 +8,7 @@ FINE_TUNE_MODEL = os.getenv("FINE_TUNE_MODEL")
 tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL)
 model = AutoModelForSeq2SeqLM.from_pretrained(FINE_TUNE_MODEL)
 
+
 def generate_summary(text):
     inputs = tokenizer(text, return_tensors="pt", truncation=True)
     summary_ids = model.generate(

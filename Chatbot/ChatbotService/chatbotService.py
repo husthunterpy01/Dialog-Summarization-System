@@ -9,16 +9,19 @@ LLM_MODEL = os.getenv("LLM_MODEL")
 # Load the sentence transformer model for the query
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
-def generate_response(user_query):
+def generate_response(user_query,sum_context=None):
     # Get embedding for the user's query
     query_embedding = model.encode([user_query])
     query_embedding = query_embedding.flatten().tolist()
 
     # Search the database for relevant document embeddings
-    search_results = get_query_results(query_embedding,user_query,18,5)
+    search_results = get_query_results(query_embedding,user_query,50,20)
 
     context = truncate_search_results(search_results)
-    prompt = f"Context: {context}\n\nQuestion: {user_query}\nAnswer:"
+    if sum_context:
+        prompt = f"Context: {context}\n\nSummary_Context: {sum_context}\n\nQuestion: {user_query}\nAnswer:"
+    else:
+        prompt = f"Context: {context}\n\nQuestion: {user_query}\nAnswer:"
 
     llama_chatbot = LLM(LLM_MODEL)
     llm_response = llama_chatbot.generate_response(prompt)

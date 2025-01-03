@@ -1,6 +1,5 @@
 import os
 import shutil
-import json
 from dotenv import load_dotenv
 from fastapi import UploadFile, File, HTTPException, APIRouter
 from typing import List
@@ -64,12 +63,14 @@ async def upload_pdf(files: List[UploadFile] = File(...)):
 
             results.append({"file": file.filename, "status": "Processed successfully"})
         except Exception as e:
-            results.append({"file": file.filename, "status": f"Error: {str(e)}"})
+            error_message = f"Error processing file {file.filename}: {str(e)}"
+            raise HTTPException(status_code=500, detail=error_message)
+
 
     return JSONResponse(
-        status_code=200,
-        content={"results": results}
-    )
+            status_code=200,
+            content={"results": results}
+        )
 
 @router.post("/user/summarizeChat/{session_id}")
 async def summarizeChatSession(session_id: str, request: SummarizeChatRequest):

@@ -1,0 +1,10 @@
+[
+    {
+        "role": "user",
+        "response": "What"
+    },
+    {
+        "role": "chatbot",
+        "response": "Here's what I found from the database:\nA"
+    }
+]

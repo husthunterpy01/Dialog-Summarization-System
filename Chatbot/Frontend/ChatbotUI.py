@@ -5,7 +5,6 @@ import requests
 import json
 import os
 from datetime import datetime
-import pandas as pd
 # Load environment variables
 load_dotenv()
 
@@ -159,7 +158,18 @@ if st.session_state.current_session:
         if st.session_state.current_session:
             session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
             if session_data:
-                session_file_name = f"{st.session_state.current_session}.json"
+                # Get the directory of the executed script
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+
+                # Target the parent directory of the executed script
+                base_folder = os.path.join(current_dir, "..")
+                chatlog_folder = os.path.join(base_folder, "Chatlog")
+
+                # Create the Chatlog folder if it doesn't exist
+                os.makedirs(chatlog_folder, exist_ok=True)
+
+                # Save the session data to a JSON file in the 'Chatlog' folder
+                session_file_name = os.path.join(chatlog_folder, f"{st.session_state.current_session}.json")
                 with open(session_file_name, "w") as f:
                     json.dump(session_data, f, indent=4)
 

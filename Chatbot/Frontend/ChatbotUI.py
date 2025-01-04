@@ -22,7 +22,9 @@ if "last_summary_index" not in st.session_state:
     st.session_state.last_summary_index = {}
 if "execution_times" not in st.session_state:
     st.session_state.execution_times = {"with_summary": [], "without_summary": []}
-
+# Display welcome message when the app loads or a new session starts
+if "has_greeted" not in st.session_state:
+    st.session_state.has_greeted = False
 
 # Helper function to start a new session
 def start_new_session():
@@ -58,12 +60,29 @@ def extract_latest_section(data, last_section):
         return last_section
     return extracted_section
 
+# Home menu
+if not st.session_state.has_greeted and not st.session_state.current_session:
+    st.markdown("## Welcome to the Chatbot Interface! 🤖")
+    st.markdown(
+        """
+        <ul style="font-size: 20px; list-style-type: none; padding-left: 0;">
+            <li>👉 Start a new session or select an existing one to continue.</li>
+            <li>👉 You can upload PDF files, save your chat history, or summarize the current session.</li>
+            <li>👉 Use the sidebar for session controls and other features.</li>
+            <li>👉 A small comparison on the summarization as context vs non-summarization can be found by enabling execution time and pressing display current comparison 📊</li>
+            <li>👉 Start a new session to begin the conversation. Enjoy! 🌟</li>
+        </ul>
+        """,
+        unsafe_allow_html=True
+    )
+    st.session_state.has_greeted = True
+
 # Sidebar for session management
 st.sidebar.title("Chat Sessions")
 if st.sidebar.button("Start New Session"):
     start_new_session()
+    st.session_state.has_greeted = False
     successMess = st.success(f"New session started: {st.session_state.current_session}")
-    time.sleep(3)
     successMess.empty()
 
 # Display existing sessions in the sidebar

@@ -98,6 +98,12 @@ if existing_sessions:
 if st.session_state.current_session:
     st.sidebar.write(f"Current Session: {st.session_state.current_session}")
 
+# Section to display notifications
+if "notification_message" in st.session_state and st.session_state.notification_message:
+    st.success(st.session_state.notification_message)
+    # Clear the notification after displaying
+    st.session_state.notification_message = None
+
 # Upload PDF Section
 st.sidebar.markdown("---")  # Separator line for clarity
 with st.sidebar.expander("Upload PDF File", expanded=False):
@@ -117,17 +123,18 @@ with st.sidebar.expander("Upload PDF File", expanded=False):
                     # Handle the response
                     if response.status_code == 200:
                         result = response.json().get("result", {})
-                        st.sidebar.success(
+                        st.session_state.notification_message = (
                             f"{result.get('file', uploaded_file.name)}: {result.get('status', 'Uploaded successfully')}"
                         )
+                        st.experimental_rerun()  # Force a rerun to display the notification
                     else:
-                        st.sidebar.error(
+                        st.error(
                             f"Failed to upload {uploaded_file.name}: {response.text}"
                         )
                 except requests.exceptions.RequestException as e:
-                    st.sidebar.error(f"An error occurred: {e}")
+                    st.error(f"An error occurred: {e}")
         else:
-            st.sidebar.warning("No files were selected for upload.")
+            st.warning("No files were selected for upload.")
 
 # Execution time comparison
 with st.sidebar.expander("Compare Execution Times"):

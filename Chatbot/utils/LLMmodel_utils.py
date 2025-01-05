@@ -2,16 +2,21 @@ from llama_cpp import Llama
 class LLM:
     def __init__(self, model_path):
         # Load the model using llama_cpp
-        self.model = Llama(model_path)
+        self.model = Llama(model_path, n_ctx = 10000)
+        # self.model = Llama.from_pretrained(
+        #     repo_id="unsloth/Llama-3.2-3B-Instruct-GGUF",
+        #     filename="Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        #     n_ctx=10000
+        # )
 
     def generate_response(self, prompt: str) -> str:
         try:
             # Generate a response based on the given prompt
             response = self.model(
                 prompt,
+                echo=False,
                 max_tokens=256,
-                stop=["\n"],
-                echo=False
+                temperature=0
             )
             # Get the raw output text
             raw_output = response.get('choices', [{}])[0].get('text', "").strip()

@@ -107,7 +107,6 @@ def execute_comparison(latest_query, recent_chat_context, recent_chat_context_wi
         "output_tokens_without_summary": output_tokens_without_summary,
     }
 
-from io import BytesIO
 
 def plot_comparison_results(comparison_data, query_index):
     # Create Execution Time Line Graph
@@ -143,6 +142,19 @@ def plot_comparison_results(comparison_data, query_index):
     buf_token_count.seek(0)
 
     return buf_exec_time, buf_token_count
+
+def exclude_non_serializable(data):
+    """
+    Recursively remove non-serializable objects like BytesIO from nested data structures.
+    """
+    if isinstance(data, dict):
+        # Filter out non-serializable values in dictionaries
+        return {k: exclude_non_serializable(v) for k, v in data.items() if not isinstance(v, BytesIO)}
+    elif isinstance(data, list):
+        # Apply to each item in lists
+        return [exclude_non_serializable(item) for item in data]
+    # Return the data if it's serializable
+    return data
 
 
 # Home menu
@@ -229,7 +241,10 @@ with st.sidebar.expander("Compare Execution Times"):
 if st.sidebar.button("Save Current Session"):
     if st.session_state.current_session:
         session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
-
+        st.session_state.chat_sessions[st.session_state.current_session] = [
+            msg for msg in st.session_state.chat_sessions[st.session_state.current_session]
+            if "Comparison Results" not in msg.get("response", "")
+        ]
         # Filter non-serializable objects and unwanted messages
         serializable_session_data = []
         for message in session_data:
@@ -245,8 +260,8 @@ if st.sidebar.button("Save Current Session"):
             serializable_message = message.copy()
 
             # Remove non-serializable objects like 'plot'
-            if "plot" in serializable_message:
-                del serializable_message["plot"]
+            serializable_message.pop("plot_exec_time", None)
+            serializable_message.pop("plot_token_count", None)
 
             # Append only filtered messages
             serializable_session_data.append(serializable_message)
@@ -279,6 +294,10 @@ if st.sidebar.button("Save Current Session"):
 
 # Summarize current chat session
 if st.session_state.current_session:
+    st.session_state.chat_sessions[st.session_state.current_session] = [
+        msg for msg in st.session_state.chat_sessions[st.session_state.current_session]
+        if "Comparison Results" not in msg.get("response", "")
+    ]
     if st.sidebar.button("Summarize Current Section"):
         session_id = st.session_state.current_session
         session_data = st.session_state.chat_sessions.get(session_id, [])
@@ -363,9 +382,7 @@ if st.sidebar.button("Display Execution Comparison"):
 
                     # Extract the current chat section for comparison
                     last_section_data = st.session_state.get("last_section_data", [])
-                    current_section = extract_latest_section(
-                        session_data, last_section_data
-                    )
+                    current_section = extract_latest_section(session_data, last_section_data)
                     recent_chat_context = {
                         "message": [
                             {"role": msg["role"], "response": clean_response(msg["response"])}
@@ -373,25 +390,11 @@ if st.sidebar.button("Display Execution Comparison"):
                         ]
                     }
                     # Filter non-serializable objects and unwanted messages
-                    serializable_session_data = []
-                    for message in session_data:
-                        # Exclude messages that are summaries
-                        if "response" in message and message["response"].startswith("Here's the summary of our session:"):
-                            continue
-
-                        # Exclude messages containing specific keywords like "Execution Time Comparison"
-                        if "response" in message and "Execution Time Comparison" in message["response"]:
-                            continue
-
-                        # Create a copy of the message to filter non-serializable objects
-                        serializable_message = message.copy()
-
-                        # Remove non-serializable objects like 'plot'
-                        if "plot" in serializable_message:
-                            del serializable_message["plot"]
-
-                        # Append only filtered messages
-                        serializable_session_data.append(serializable_message)
+                    serializable_session_data = [
+                        {k: v for k, v in msg.items() if not isinstance(v, BytesIO)}
+                        for msg in session_data
+                        if not msg["response"].startswith("Here's the summary of our session:")
+                    ]
 
                     recent_chat_context_without_summary = {"message": serializable_session_data}
 
@@ -405,7 +408,7 @@ if st.sidebar.button("Display Execution Comparison"):
                         comparison_results, [latest_query_index]
                     )
 
-                    # Append comparison results to chat history
+                    # Append comparison results to chat history as a single entry
                     comparison_response = (
                         f"**Comparison Results:**\n\n"
                         f"- **With Summary Context:**\n"
@@ -419,24 +422,28 @@ if st.sidebar.button("Display Execution Comparison"):
                     )
                     st.session_state.chat_sessions[st.session_state.current_session].append(
                         {
-                            "role": "chatbot",
+                            "role": "assistant",
                             "response": comparison_response,
                             "plot_exec_time": fig_exec_time,
                             "plot_token_count": fig_token_count,
                         }
                     )
+                else:
+                    st.warning("No user queries found to display comparison.")
         else:
-            st.warning("No user queries found to display comparison.")
+            st.warning("No session data available for comparison.")
     else:
-        st.warning("No session data available for comparison.")
-else:
-    st.error("Enable Execution Time Comparison to use this feature.")
+        st.error("Enable Execution Time Comparison to use this feature.")
+
 
 
 # Chatbot interaction session
 if st.session_state.current_session:
     st.header("Ask a Question")
-
+    st.session_state.chat_sessions[st.session_state.current_session] = [
+        msg for msg in st.session_state.chat_sessions[st.session_state.current_session]
+        if "Comparison Results" not in msg.get("response", "")
+    ]
     # Display chat history for the current session
     for message in st.session_state.chat_sessions[st.session_state.current_session]:
         if message["role"] == "user":

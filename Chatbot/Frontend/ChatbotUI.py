@@ -4,6 +4,7 @@ import streamlit as st
 import requests
 import json
 import os
+from io import BytesIO
 from datetime import datetime
 import matplotlib.pyplot as plt
 
@@ -59,6 +60,90 @@ def extract_latest_section(data, last_section):
     if not extracted_section and last_section:
         return last_section
     return extracted_section
+
+# Execution time comparison logic refactored
+def execute_comparison(latest_query, recent_chat_context, recent_chat_context_without_summary):
+    # Initialize lists to store results for plotting
+    exec_time_with_summary = []
+    exec_time_without_summary = []
+    input_tokens_with_summary = []
+    output_tokens_with_summary = []
+    input_tokens_without_summary = []
+    output_tokens_without_summary = []
+
+    # With Summary Context
+    payload_with_summary = {
+        "queryResponse": latest_query,
+        "sumContext": st.session_state.summary if "summary" in st.session_state else None,
+        "isComparedExecution": True,
+        "recentChatContext": recent_chat_context if recent_chat_context else None,
+    }
+    response_with_summary, time_with_summary = measure_execution_time(payload_with_summary)
+    exec_time_with_summary.append(time_with_summary)
+    if response_with_summary.status_code == 200:
+        data = response_with_summary.json()
+        input_tokens_with_summary.append(data.get("input_tokens", 0))
+        output_tokens_with_summary.append(data.get("output_tokens", 0))
+
+    # Without Summary Context
+    payload_without_summary = {
+        "queryResponse": latest_query,
+        "isComparedExecution": True,
+        "recentChatContext": recent_chat_context_without_summary if recent_chat_context_without_summary else None,
+    }
+    response_without_summary, time_without_summary = measure_execution_time(payload_without_summary)
+    exec_time_without_summary.append(time_without_summary)
+    if response_without_summary.status_code == 200:
+        data = response_without_summary.json()
+        input_tokens_without_summary.append(data.get("input_tokens", 0))
+        output_tokens_without_summary.append(data.get("output_tokens", 0))
+
+    return {
+        "exec_time_with_summary": exec_time_with_summary,
+        "exec_time_without_summary": exec_time_without_summary,
+        "input_tokens_with_summary": input_tokens_with_summary,
+        "output_tokens_with_summary": output_tokens_with_summary,
+        "input_tokens_without_summary": input_tokens_without_summary,
+        "output_tokens_without_summary": output_tokens_without_summary,
+    }
+
+from io import BytesIO
+
+def plot_comparison_results(comparison_data, query_index):
+    # Create Execution Time Line Graph
+    fig_exec_time = plt.figure(figsize=(8, 5))
+    plt.plot(query_index, comparison_data["exec_time_with_summary"], label="With Summary", marker="o")
+    plt.plot(query_index, comparison_data["exec_time_without_summary"], label="Without Summary", marker="o")
+    plt.xlabel("Query Index")
+    plt.ylabel("Execution Time (seconds)")
+    plt.title("Execution Time Comparison")
+    plt.legend()
+    plt.grid()
+
+    # Save fig_exec_time as an image
+    buf_exec_time = BytesIO()
+    fig_exec_time.savefig(buf_exec_time, format='png')
+    buf_exec_time.seek(0)
+
+    # Create Token Count Line Graph
+    fig_token_count = plt.figure(figsize=(8, 5))
+    plt.plot(query_index, comparison_data["input_tokens_with_summary"], label="Input Tokens With Summary", marker="o")
+    plt.plot(query_index, comparison_data["output_tokens_with_summary"], label="Output Tokens With Summary", marker="o")
+    plt.plot(query_index, comparison_data["input_tokens_without_summary"], label="Input Tokens Without Summary", marker="o")
+    plt.plot(query_index, comparison_data["output_tokens_without_summary"], label="Output Tokens Without Summary", marker="o")
+    plt.xlabel("Query Index")
+    plt.ylabel("Token Count")
+    plt.title("Token Count Comparison")
+    plt.legend()
+    plt.grid()
+
+    # Save fig_token_count as an image
+    buf_token_count = BytesIO()
+    fig_token_count.savefig(buf_token_count, format='png')
+    buf_token_count.seek(0)
+
+    return buf_exec_time, buf_token_count
+
 
 # Home menu
 if not st.session_state.has_greeted and not st.session_state.current_session:
@@ -262,43 +347,88 @@ if st.session_state.current_session:
             else:
                 st.warning("No new messages to summarize.")
 
+# Measure execution times if comparison is enabled
 if st.sidebar.button("Display Execution Comparison"):
-    if st.session_state.execution_times["with_summary"] and st.session_state.execution_times["without_summary"]:
-        # Calculate averages
-        avg_with_summary = sum(st.session_state.execution_times["with_summary"]) / len(
-            st.session_state.execution_times["with_summary"]
-        )
-        avg_without_summary = sum(st.session_state.execution_times["without_summary"]) / len(
-            st.session_state.execution_times["without_summary"]
-        )
+    if compare_execution:
+        if st.session_state.current_session:
+            session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
+            user_prompts = [msg["response"] for msg in session_data if msg["role"] == "user"]
 
-        # Create the plot
-        fig, ax = plt.subplots()
-        ax.plot(st.session_state.execution_times["with_summary"], label="With Summary", marker="o")
-        ax.plot(st.session_state.execution_times["without_summary"], label="Without Summary", marker="o")
-        ax.set_xlabel("Query Index")
-        ax.set_ylabel("Execution Time (s)")
-        ax.set_title("Execution Time Comparison")
-        ax.legend()
+            if user_prompts:
+                latest_query_index = len(user_prompts) - 1
+                latest_query = user_prompts[latest_query_index]
 
-        # Save the plot to the chat session
-        comparison_message = {
-            "role": "chatbot",
-            "response": f"**Execution Time Comparison:**\n\n"
-                        f"**Average Time with Summarization:** {avg_with_summary:.2f} seconds\n\n"
-                        f"**Average Time without Summarization:** {avg_without_summary:.2f} seconds\n",
-            "plot": fig  # Add the plot object to display later
-        }
-        st.session_state.chat_sessions[st.session_state.current_session].append(comparison_message)
+                # Extract the current chat section for comparison
+                last_section_data = st.session_state.get("last_section_data", [])
+                current_section = extract_latest_section(
+                    session_data, last_section_data
+                )
+                recent_chat_context = {
+                    "message": [
+                        {"role": msg["role"], "response": clean_response(msg["response"])}
+                        for msg in current_section
+                    ]
+                }
+                # Filter non-serializable objects and unwanted messages
+                serializable_session_data = []
+                for message in session_data:
+                    # Exclude messages that are summaries
+                    if "response" in message and message["response"].startswith("Here's the summary of our session:"):
+                        continue
 
+                    # Exclude messages containing specific keywords like "Execution Time Comparison"
+                    if "response" in message and "Execution Time Comparison" in message["response"]:
+                        continue
+
+                    # Create a copy of the message to filter non-serializable objects
+                    serializable_message = message.copy()
+
+                    # Remove non-serializable objects like 'plot'
+                    if "plot" in serializable_message:
+                        del serializable_message["plot"]
+
+                    # Append only filtered messages
+                    serializable_session_data.append(serializable_message)
+
+                recent_chat_context_without_summary = {"message": serializable_session_data}
+
+                # Perform execution comparison
+                comparison_results = execute_comparison(
+                    latest_query, recent_chat_context, recent_chat_context_without_summary
+                )
+
+                # Generate plots
+                fig_exec_time, fig_token_count = plot_comparison_results(
+                    comparison_results, [latest_query_index]
+                )
+
+                # Append comparison results to chat history
+                comparison_response = (
+                    f"**Comparison Results:**\n\n"
+                    f"- **With Summary Context:**\n"
+                    f"  - Execution Time: {comparison_results['exec_time_with_summary'][0]:.2f} seconds\n"
+                    f"  - Input Tokens: {comparison_results['input_tokens_with_summary'][0]}\n"
+                    f"  - Output Tokens: {comparison_results['output_tokens_with_summary'][0]}\n\n"
+                    f"- **Without Summary Context:**\n"
+                    f"  - Execution Time: {comparison_results['exec_time_without_summary'][0]:.2f} seconds\n"
+                    f"  - Input Tokens: {comparison_results['input_tokens_without_summary'][0]}\n"
+                    f"  - Output Tokens: {comparison_results['output_tokens_without_summary'][0]}"
+                )
+                st.session_state.chat_sessions[st.session_state.current_session].append(
+                    {
+                        "role": "chatbot",
+                        "response": comparison_response,
+                        "plot_exec_time": fig_exec_time,
+                        "plot_token_count": fig_token_count,
+                    }
+                )
+            else:
+                st.warning("No user queries found to display comparison.")
+        else:
+            st.warning("No session data available for comparison.")
     else:
-        # Add a warning message to the chat if no data is available
-        st.session_state.chat_sessions[st.session_state.current_session].append(
-            {
-                "role": "chatbot",
-                "response": "No execution data available for comparison."
-            }
-        )
+        st.error("Enable Execution Time Comparison to use this feature.")
+
 
 # Chatbot interaction session
 if st.session_state.current_session:
@@ -312,41 +442,52 @@ if st.session_state.current_session:
         elif message["role"] == "chatbot":
             with st.chat_message("assistant"):
                 st.markdown(message["response"])
-                # Display the plot if it exists in the message
-                if "plot" in message:
-                    st.pyplot(message["plot"])
+                if "plot_exec_time" in message:
+                    st.image(message["plot_exec_time"], caption="Execution Time Comparison")
+                if "plot_token_count" in message:
+                    st.image(message["plot_token_count"], caption="Token Count Comparison")
 
     # Chat input
     user_query = st.chat_input("Enter your question", key="user_input")
+
+    # Session_data (for the whole chatlog)
+    session_data = st.session_state.chat_sessions.get(st.session_state.current_session, [])
+    # Extract the current section (a part of chatlog) using the same logic
+    last_section_data = st.session_state.get("last_section_data", [])
+    current_section = extract_latest_section(
+        st.session_state.chat_sessions.get(st.session_state.current_session, []),
+        last_section_data
+    )
+
+    if current_section != last_section_data:
+        st.session_state["last_section_data"] = current_section
+
     if user_query:
-        # Add user query to chat session
         st.session_state.chat_sessions[st.session_state.current_session].append(
             {"role": "user", "response": user_query}
         )
         with st.chat_message("user"):
             st.markdown(user_query)
 
-        # Prepare payload
-        if "summary" in st.session_state and st.session_state.summary:
-            payload_with_summary = {"queryResponse": user_query, "summary_context": st.session_state.summary}
-        else:
-            payload_with_summary = None
-        payload_without_summary = {"queryResponse": user_query}
+        # Reformat the chat context
+        recent_chat_context = {
+            "message": [
+                {"role": msg["role"], "response": clean_response(msg["response"])}
+                for msg in current_section
+            ]
+        }
 
-        # Measure execution times if comparison is enabled
-        if compare_execution:
-            if payload_with_summary:
-                _, time_with_summary = measure_execution_time(payload_with_summary)
-                st.session_state.execution_times["with_summary"].append(time_with_summary)
-            _, time_without_summary = measure_execution_time(payload_without_summary)
-            st.session_state.execution_times["without_summary"].append(time_without_summary)
+        # Prepare payload based on whether execution time comparison is enabled
+        payload = {
+            "queryResponse": user_query,
+            "sumContext": st.session_state.summary if "summary" in st.session_state else None,
+            "isComparedExecution": False,
+            "recentChatContext": recent_chat_context if recent_chat_context else None,
+        }
 
-        # Get response
-        payload = payload_with_summary if payload_with_summary else payload_without_summary
         response = requests.post(f"{BASE_URL}/api/user/query/", json=payload)
         chatbot_response = response.json().get("response", "No response received")
 
-        # Add assistant response to chat session
         st.session_state.chat_sessions[st.session_state.current_session].append(
             {"role": "chatbot", "response": chatbot_response}
         )

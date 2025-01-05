@@ -1,3 +1,3 @@
 from .Queryresponse import QueryResponse
-
-__all__ = ["QueryResponse"]
+from .ChatLog import Chatlog
+__all__ = ["QueryResponse", "Chatlog"]

@@ -27,12 +27,17 @@ async def root():
     return {"message": "Welcome to the Chatbot API"}
 
 @router.post("/user/query/")
-async def query(userprompt: QueryResponse):
+async def queryService(userprompt: QueryResponse):
     try:
-        response = generate_response(userprompt.queryResponse, userprompt.sumContext)
+        isComparedExecution = userprompt.isComparedExecution if hasattr(userprompt, "isComparedExecution") else False
+        result = generate_response(userprompt.queryResponse, userprompt.sumContext, userprompt.recentChatContext, isCalculatedTokens=isComparedExecution)
         return JSONResponse(
             status_code=200,
-            content={"response": response}
+            content={
+                "response": result["response"],
+                "input_tokens": result["input_tokens"] if isComparedExecution else None,
+                "output_tokens": result["output_tokens"] if isComparedExecution else None,
+            }
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

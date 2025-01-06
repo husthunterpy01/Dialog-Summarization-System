@@ -422,7 +422,7 @@ if st.sidebar.button("Display Execution Comparison"):
                     )
                     st.session_state.chat_sessions[st.session_state.current_session].append(
                         {
-                            "role": "assistant",
+                            "role": "chatbot",
                             "response": comparison_response,
                             "plot_exec_time": fig_exec_time,
                             "plot_token_count": fig_token_count,
@@ -440,10 +440,6 @@ if st.sidebar.button("Display Execution Comparison"):
 # Chatbot interaction session
 if st.session_state.current_session:
     st.header("Ask a Question")
-    st.session_state.chat_sessions[st.session_state.current_session] = [
-        msg for msg in st.session_state.chat_sessions[st.session_state.current_session]
-        if "Comparison Results" not in msg.get("response", "")
-    ]
     # Display chat history for the current session
     for message in st.session_state.chat_sessions[st.session_state.current_session]:
         if message["role"] == "user":

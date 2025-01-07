@@ -2,11 +2,22 @@
 
 ## Summary
 ## Environment setup
-
-## Dataset
+## Fine-tuning BART-based with SamSUM and TweeetSUM<
+<details>
+<summary> Dataset</summary>
 In this project, I will conduct on a 2 public dataset called SamSUM(2019) and TweetSUM(2021), in which the 1st will be used for pre-trained and the last one is used for fine-tune purpose
-## Pre-training with BART-base 
-## Fine-tuning BART-SamSUM
+
+</details>
+
+<details>
+<summary> Pre-training with BART-base</summary>
+</details>
+
+<details>
+<summary> Fine-tuning BART-SamSUM</summary>
+</details>
+
+
 ## Chat bot execution
 ### Document for retrival
 ### Method for increaseing searching performance

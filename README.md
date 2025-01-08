@@ -24,12 +24,40 @@ Both the dataset will be pre-processed by this script before being fine-tuned by
 <details>
 <summary> Pre-training with BART-base</summary>
  BART-based will first be pre-trained with SamSUM dataset in order to have a better understaanding in general chat format, by the following configuration:
-![Header](./Image/Pre-trained BART/SamSUM_trainedconfiguration.png) 
+ 
+![Header](./Image/Pre-trained_BART/SamSUM_trainedconfiguration.png) 
+
+After the trainning here are some results in terms of ROUGE score for the pre-trained BART-based:
+
+![Header](./Image/Pre-trained_BART/SamSUM_pretrained_batched.png) 
+
+Final ROUGE score:
+
+![Header](./Image/Pre-trained_BART/SamSUM_ROUGEScore.png) 
+
+Details can be witnessed on wandb records:
+![Header](./Image/Pre-trained_BART/SamSUM_train.png) 
+![Header](./Image/Pre-trained_BART/SamSUM_eval.png) 
 
 </details>
 
 <details>
 <summary> Fine-tuning BART-SamSUM</summary>
+ After pre-trainning with BART-based, it will be fine-tuned with TweetSUM for customer-service summary understanding :
+ 
+![Header](./Image/Fine-tuned_BART/TweetSUM_trainconfiguration.png) 
+
+After the trainning here are some results in terms of ROUGE score for the fine-tuned BART-based:
+
+![Header](./Image/Fine-tuned_BART/TweetSUM_Finetuned.png) 
+
+Final ROUGE score:
+
+![Header](./Image/Fine-tuned_BART/TweetSUM_ROUGEScore.png) 
+
+Details can be witnessed on wandb records:
+![Header](./Image/Fine-tuned_BART/TweetSUM_trained.png) 
+![Header](./Image/Fine-tuned_BART/TweetSUM_eval.png) 
 </details>
 
 

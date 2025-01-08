@@ -17,14 +17,14 @@ TweetSUM is a dataset focused on summarization of dialogs, which represents the 
 ![Header](./Image/DatasetPreparation/TweetSUM_dataset.png)
 Dataset link: [Dataset/TweetSUM](./Dataset/TweetSUM)  . For the orignal one, please visit this site [TweetSUM](https://github.com/guyfe/Tweetsumm)
 
-Both the dataset will be pre-processed by this script: ![Header](./Image/DatasetPreparation/preprocessing_dataset.png) before being fine-tuned by BART-based
-
+Both the dataset will be pre-processed by this script before being fine-tuned by BART-based:
+![Header](./Image/DatasetPreparation/preprocessing_dataset.png) 
 </details>
 
 <details>
 <summary> Pre-training with BART-base</summary>
  BART-based will first be pre-trained with SamSUM dataset in order to have a better understaanding in general chat format, by the following configuration:
- ![Header](./Image/Pre-trained BART/SamSUM_trainedconfiguration.png)
+![Header](./Image/Pre-trained BART/SamSUM_trainedconfiguration.png) 
 
 </details>
 

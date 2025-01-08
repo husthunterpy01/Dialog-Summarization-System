@@ -60,13 +60,18 @@ Details can be witnessed on wandb records:
 ![Header](./Image/Fine-tuned_BART/TweetSUM_eval.png) 
 </details>
 
-For the fine-tuned checkpoint, I have already uploaded on huggingface, please visit this site to get the model: [BART_SamSUM_TWeetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) 
+For the fine-tuned checkpoint, I have already uploaded on huggingface, please visit this site to get the model: [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) 
 
 ## Chat bot execution
 ### Document for retrival
+In this demo, I use the Iphonne User Guide as the document for this RAG chatbot, referring to [Customer-Service-Handbook-English.pdf](./Docs). I have already uploaded some other documents on the Docs Folder for testing, or you can also use other types of documents to test with this chatbot.
 ### Method for increaseing searching performance
-- Hybrid search
-- Semantic chunking
+As the base RAG architecture does not work well for document retrival in some cases, I have implemented some methods to improve the retrival performance
+- **Hybrid search**
+  Hybrid search will optimize the strength of both vector-search (contextual search) and key-word search, which is useful in some cases when you need to search for keyword or name of a person that can't be handled properly in terms of single vector search
+  
+- **Semantic chunking**
+  Instead of fixed chunking at a fixed size, using semantic chunking helps user to seperate the chunk into meaningful chunks, which is conducive for later content retrival 
 ### Chatbot implementation
 ### Performance comparison
 ## Conclusion

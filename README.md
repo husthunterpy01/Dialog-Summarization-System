@@ -10,13 +10,22 @@ I have already uploaded 2 datasets to this repos. If you are interested in the o
  
 - SamSUM dataset:
  SamSUM is a dataset with the format of messenger-like conversations with summaries, with style and register are diversified.
-  
+![Header](./Image/DatasetPreparation/samsum_dataset.png)
+Dataset link: [Dataset/SamSUM](./Dataset/SamSUM) . For the orignal one, please visit this site [SamSUM](https://paperswithcode.com/dataset/samsum-corpus)
 - TweetSUM dataset:
 TweetSUM is a dataset focused on summarization of dialogs, which represents the rich domain of Twitter customer care conversations
+![Header](./Image/DatasetPreparation/TweetSUM_dataset.png)
+Dataset link: [Dataset/TweetSUM](./Dataset/TweetSUM)  . For the orignal one, please visit this site [TweetSUM](https://github.com/guyfe/Tweetsumm)
+
+Both the dataset will be pre-processed by this script: ![Header](./Image/DatasetPreparation/preprocessing_dataset.png) before being fine-tuned by BART-based
+
 </details>
 
 <details>
 <summary> Pre-training with BART-base</summary>
+ BART-based will first be pre-trained with SamSUM dataset in order to have a better understaanding in general chat format, by the following configuration:
+ ![Header](./Image/Pre-trained BART/SamSUM_trainedconfiguration.png)
+
 </details>
 
 <details>

@@ -1,7 +1,7 @@
 from datetime import datetime
-from chatbot.utils.database import conversation_collection
-from chatbot.model.ChatLog import Chatlog
-from chatbot.model.ChatSummarySession import ChatSummarizeSession
+from chatbot.utils.database_utils import conversation_collection
+from chatbot.model.chatlog import Chatlog
+from chatbot.model.chatsummarysession import ChatSummarizeSession
 
 def saveChatConversation(sessionId: str, chatSession: Chatlog):
     message_dicts = [message.model_dump() for message in chatSession.message]

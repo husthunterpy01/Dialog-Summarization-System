@@ -3,7 +3,7 @@ from chatbot.utils.database_utils import conversation_collection
 from chatbot.model.chatlog import Chatlog
 from chatbot.model.chatsummarysession import ChatSummarizeSession
 
-def saveChatConversation(sessionId: str, chatSession: Chatlog):
+def save_chatconversation(sessionId: str, chatSession: Chatlog):
     message_dicts = [message.model_dump() for message in chatSession.message]
 
     conversation_collection.update_one(
@@ -16,7 +16,7 @@ def saveChatConversation(sessionId: str, chatSession: Chatlog):
     )
 
 
-def saveSummaryBySession(sessionId: str, summaryBySession: ChatSummarizeSession):
+def save_summarybysession(sessionId: str, summaryBySession: ChatSummarizeSession):
     insertedSummary = {
         "timestamp": datetime.now().isoformat(),
         "summary": summaryBySession.summary
@@ -34,7 +34,7 @@ def saveSummaryBySession(sessionId: str, summaryBySession: ChatSummarizeSession)
         upsert=True
     )
 
-def createSessionIdIndex():
+def create_sessionindex():
     existing_indexes = conversation_collection.index_information()
     # Check if the index on the field already exists
     index_name = "session_id_1" #Index_name_sortoder naming convention for mongo 1:ascending 0: descending

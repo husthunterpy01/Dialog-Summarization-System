@@ -3,7 +3,7 @@ import fitz
 import pdfplumber
 import shutil
 import numpy as np
-from chatbot.chatbotService.vectordbHandlingService import save_embeddings_to_db
+from chatbot.chatbotservice.vectordbHandlingService import save_embeddings_to_db
 from chatbot.utils.embedding_utils import get_embedding, validate_and_truncate_text
 from chatbot.utils.semanticembedding_utils import _split_sentences, _combine_sentences, convert_to_vector, _calculate_cosine_distances
 

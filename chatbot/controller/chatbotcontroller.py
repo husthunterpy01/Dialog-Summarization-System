@@ -11,7 +11,7 @@ from chatbot.utils.database_utils import MongoDBClient
 from chatbot.model.chatsummarizationrequest import SummarizeChatRequest
 from chatbot.model.chatlog import Chatlog
 from chatbot.model.chatsummarysession import ChatSummarizeSession
-from chatbot.chatbotservice.chatlog_service import saveChatConversation, saveSummaryBySession,createSessionIdIndex
+from chatbot.chatbotservice.chatlog_service import save_chatconversation, save_summarybysession,create_sessionindex
 from chatbot.chatbotservice.chatbotlogsummary_service import generate_summary
 
 load_dotenv()
@@ -27,7 +27,7 @@ async def root():
     return {"message": "Welcome to the Chatbot API"}
 
 @router.post("/user/query/")
-async def queryService(userprompt: QueryResponse):
+async def query_prompt(userprompt: QueryResponse):
     try:
         isComparedExecution = userprompt.isComparedExecution if hasattr(userprompt, "isComparedExecution") else False
         result = generate_response(userprompt.queryResponse, userprompt.sumContext, userprompt.recentChatContext, isCalculatedTokens=isComparedExecution)
@@ -78,7 +78,7 @@ async def upload_pdf(files: List[UploadFile] = File(...)):
         )
 
 @router.post("/user/summarizeChat/{session_id}")
-async def summarizeChatSession(session_id: str, request: SummarizeChatRequest):
+async def summarize_chatsession(session_id: str, request: SummarizeChatRequest):
     try:
         # Extract the session history log from the request body
         session_history_log = request.sessionHistoryLog
@@ -99,11 +99,11 @@ async def summarizeChatSession(session_id: str, request: SummarizeChatRequest):
         raise HTTPException(status_code=500, detail=f"Failed to summarize chat session: {str(e)}")
 
 @router.post("/user/saveChatHistoryBySession/{session_id}")
-async def saveChatHistoryBySession(session_id: str, sessionHistory: Chatlog):
+async def save_chathistory_bysession(session_id: str, sessionHistory: Chatlog):
     response = []
     try:
-        createSessionIdIndex()
-        saveChatConversation(session_id, sessionHistory)
+        create_sessionindex()
+        save_chatconversation(session_id, sessionHistory)
         response.append({"session_id":session_id, "status":"Save session successfully"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving chatlog: {str(e)}")
@@ -114,11 +114,11 @@ async def saveChatHistoryBySession(session_id: str, sessionHistory: Chatlog):
     )
 
 @router.post("/user/saveChatSummaryBySession/{session_id}")
-async def saveChatSummaryBySession(session_id: str, savedChatSummary: ChatSummarizeSession):
+async def save_chatsummary_bysession(session_id: str, savedChatSummary: ChatSummarizeSession):
     response = []
     try:
-        createSessionIdIndex()
-        saveSummaryBySession(session_id, savedChatSummary)
+        create_sessionindex()
+        save_summarybysession(session_id, savedChatSummary)
         response.append({"session_id":session_id, "status":"Save summary session successfully"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Save summary session fail: {str(e)}")

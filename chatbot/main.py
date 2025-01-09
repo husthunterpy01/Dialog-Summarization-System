@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from Chatbot.Controller.ChatbotController import router as chatbot_router
+from chatbot.controller.ChatbotController import router as chatbot_router
 
 # Initialize FastAPI app
 app = FastAPI()

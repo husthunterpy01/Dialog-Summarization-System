@@ -65,13 +65,61 @@ For the fine-tuned checkpoint, I have already uploaded on huggingface, please vi
 ## Chat bot execution
 ### Document for retrival
 In this demo, I use the Iphonne User Guide as the document for this RAG chatbot, referring to [Customer-Service-Handbook-English.pdf](./Docs). I have already uploaded some other documents on the Docs Folder for testing, or you can also use other types of documents to test with this chatbot.
+The document uploaded will be saved in the vector database, here is a screenshot of a document I have uploaded:
+
+![Header](./Image/Chatbot/Database_saving/document_db_saving.png) 
+
+
 ### Method for increaseing searching performance
 As the base RAG architecture does not work well for document retrival in some cases, I have implemented some methods to improve the retrival performance
-- **Hybrid search**
-  Hybrid search will optimize the strength of both vector-search (contextual search) and key-word search, which is useful in some cases when you need to search for keyword or name of a person that can't be handled properly in terms of single vector search
-  
-- **Semantic chunking**
-  Instead of fixed chunking at a fixed size, using semantic chunking helps user to seperate the chunk into meaningful chunks, which is conducive for later content retrival 
+<details>
+<summary> Hybrid search</summary>
+   Hybrid search will optimize the strength of both vector-search (contextual search) and key-word search, which is useful in some cases when you need to search for keyword or name of a person that can't be handled properly in terms of single vector search
+ 
+![Header](./Image/Chatbot/hybridsearch.png) 
+</details>
+
+<details>
+<summary>Semantic chunking</summary>
+ Instead of fixed chunking at a fixed size, using semantic chunking helps user to seperate the chunk into meaningful chunks, which is conducive for later content retrival
+ 
+![Header](./Image/Chatbot/semantic_chunking.png) 
+</details>
+
 ### Chatbot implementation
-### Performance comparison
+This chatbot is built for the customer serivce purpose Q&A for a larger sytstem.
+Before getting started, this chatbot is built based on the granite LLM by IBM, for more infomration please visit the site to download the model [Granite_LLM](https://huggingface.co/ibm-granite/granite-3.1-8b-instruct).
+In here, I use the Granite version: **Granite-3.1-3b-a800m-instruct-Q6_K.gguf** as the LLM model due to the fact that my P.C only has CPU for execution, and you can find that the chat response in the demo video is a little bit slow due to this fact.
+Here is some screenshot on this RAG chatbot system:
+- Main screen:
+
+![Header](./Image/Chatbot/chatbot_interface.png) 
+
+- Chat dialog sample:
+
+![Header](./Image/Chatbot/sample_chatdialog.png) 
+
+This chatbot allows users to ask question based on document uploaded via the system and some possible knowledge acquired from the LLM model. In the chat, the dialog can be summarized with the use of the BART-SamTweetSUM and saved every time we summarize the data, as well as the whole chatlog session:
+
+![Header](./Image/Chatbot/Database_saving/chatsession_db_saving.png) 
+
+Reminded that the chat conversation will be saved as the context for the user prompt after each summary. For the 1st time without summary, the whole chat session will be loaded as context.
+
+### Performance comparison with summary and without summary as context
+My system also use the latest summary as the context for the user's prompt so as to minimize the time response of the bot to user by reducing the input tokens. To help you understand the impact of having summary as context, I have developed a function to compare the response of the chatbot in terms of using latest summary as context and not using it as context
+
+Here is a sample question to compare:
+
+![Header](./Image/Chatbot/chat_perf.png) 
+
+Please enable the comparison so as for the system to calculate the execution time and the input/output token for the response. After the execution, here is the result for the above response:
+
+![Header](./Image/Chatbot/chat_perf1.png) 
+![Header](./Image/Chatbot/chat_perf2.png) 
+
+As you can see by adding summary as context, the response can be much faster compared to non-summary as context
 ## Conclusion
+- The demo shows how summary can work well with short dialog, but still needs improvement to cover more contents from the prev dialog
+- Needs improvement in terms of speed
+- Should also takes care of the case of hallucination
+- Will later work on web/app development integrated to provide a more friendly chat interface and oriented to the purpose of the application.

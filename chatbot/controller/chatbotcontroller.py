@@ -7,12 +7,12 @@ from starlette.responses import JSONResponse
 from chatbot.chatbotService import generate_response,process_pdf
 from chatbot.model import QueryResponse
 from chatbot.chatbotService.vectordbHandlingService import create_vectorsearch_index,create_search_index
-from chatbot.utils.database import MongoDBClient
-from chatbot.model.ChatSummarizationRequest import SummarizeChatRequest
-from chatbot.model.ChatLog import Chatlog
-from chatbot.model.ChatSummarySession import ChatSummarizeSession
-from chatbot.chatbotService.chatlogService import saveChatConversation, saveSummaryBySession,createSessionIdIndex
-from chatbot.chatbotService.chatbotLogSummaryService import generate_summary
+from chatbot.utils.database_utils import MongoDBClient
+from chatbot.model.chatsummarizationrequest import SummarizeChatRequest
+from chatbot.model.chatlog import Chatlog
+from chatbot.model.chatsummarysession import ChatSummarizeSession
+from chatbot.chatbotService.chatlog_service import saveChatConversation, saveSummaryBySession,createSessionIdIndex
+from chatbot.chatbotService.chatbotlogsummary_service import generate_summary
 
 load_dotenv()
 db_name = os.getenv("VECTOR_DB")

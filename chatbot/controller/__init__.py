@@ -1,3 +1,3 @@
-from .ChatbotController import router
+from .chatbotcontroller import router
 
 __all__ = ["router"]

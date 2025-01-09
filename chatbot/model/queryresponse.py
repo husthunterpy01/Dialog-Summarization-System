@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from .ChatLog import Chatlog
+from .chatlog import Chatlog
 class QueryResponse(BaseModel):
     queryResponse:str
     sumContext: Optional[str] = None

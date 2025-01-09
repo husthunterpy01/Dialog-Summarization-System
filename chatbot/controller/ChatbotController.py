@@ -4,15 +4,15 @@ from dotenv import load_dotenv
 from fastapi import UploadFile, File, HTTPException, APIRouter
 from typing import List
 from starlette.responses import JSONResponse
-from Chatbot.ChatbotService import generate_response,process_pdf
-from Chatbot.Model import QueryResponse
-from Chatbot.ChatbotService.vectordbHandlingService import create_vectorsearch_index,create_search_index
-from Chatbot.utils.database import MongoDBClient
-from Chatbot.Model.ChatSummarizationRequest import SummarizeChatRequest
-from Chatbot.Model.ChatLog import Chatlog
-from Chatbot.Model.ChatSummarySession import ChatSummarizeSession
-from Chatbot.ChatbotService.chatlogService import saveChatConversation, saveSummaryBySession,createSessionIdIndex
-from Chatbot.ChatbotService.chatbotLogSummaryService import generate_summary
+from chatbot.chatbotService import generate_response,process_pdf
+from chatbot.model import QueryResponse
+from chatbot.chatbotService.vectordbHandlingService import create_vectorsearch_index,create_search_index
+from chatbot.utils.database import MongoDBClient
+from chatbot.model.ChatSummarizationRequest import SummarizeChatRequest
+from chatbot.model.ChatLog import Chatlog
+from chatbot.model.ChatSummarySession import ChatSummarizeSession
+from chatbot.chatbotService.chatlogService import saveChatConversation, saveSummaryBySession,createSessionIdIndex
+from chatbot.chatbotService.chatbotLogSummaryService import generate_summary
 
 load_dotenv()
 db_name = os.getenv("VECTOR_DB")

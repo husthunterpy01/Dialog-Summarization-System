@@ -3,9 +3,9 @@ import fitz
 import pdfplumber
 import shutil
 import numpy as np
-from Chatbot.ChatbotService.vectordbHandlingService import save_embeddings_to_db
-from Chatbot.utils.embedding_utils import get_embedding, validate_and_truncate_text
-from Chatbot.utils.semanticEmbedding_utils import _split_sentences, _combine_sentences, convert_to_vector, _calculate_cosine_distances
+from chatbot.chatbotService.vectordbHandlingService import save_embeddings_to_db
+from chatbot.utils.embedding_utils import get_embedding, validate_and_truncate_text
+from chatbot.utils.semanticEmbedding_utils import _split_sentences, _combine_sentences, convert_to_vector, _calculate_cosine_distances
 
 def get_file_name(file_path) -> str:
     file_name_with_extension = os.path.basename(file_path)

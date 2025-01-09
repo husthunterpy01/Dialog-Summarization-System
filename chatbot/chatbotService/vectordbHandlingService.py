@@ -1,6 +1,6 @@
 from pymongo.operations import SearchIndexModel
-from Chatbot.utils.database import collection
-from Chatbot.utils.weightRepicoralCalc_utils import weighted_reciprocal_rank
+from chatbot.utils.database import collection
+from chatbot.utils.weightRepicoralCalc_utils import weighted_reciprocal_rank
 
 def save_embeddings_to_db(documents):
     if documents:

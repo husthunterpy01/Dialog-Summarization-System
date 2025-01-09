@@ -2,7 +2,7 @@ import os
 from transformers import AutoTokenizer
 from .vectordbHandlingService import get_query_results
 from sentence_transformers import SentenceTransformer
-from Chatbot.utils.LLMmodel_utils import LLM
+from chatbot.utils.LLMmodel_utils import LLM
 from dotenv import load_dotenv
 
 load_dotenv()

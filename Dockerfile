@@ -1,38 +1,18 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.9-slim as base
+# Base image for Python
+FROM python:3.10-slim
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy the requirements file into the image
-COPY requirements.txt /app/requirements.txt
+# Copy requirements and application files
+COPY requirements.txt ./requirements.txt
+COPY . .
 
-# Install the required packages
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . /app
+# Expose ports for Uvicorn and Streamlit
+EXPOSE 8000 8501
 
-# Create a base image for the FastAPI service
-FROM base as fastapi
-
-# Set the working directory for the FastAPI service
-WORKDIR /app/Chatbot
-
-# Expose the port for FastAPI
-EXPOSE 8000
-
-# Command to run the FastAPI service
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Create a base image for the Streamlit service
-FROM base as streamlit
-
-# Set the working directory for the Streamlit service
-WORKDIR /app/ChatbotUI
-
-# Expose the port for Streamlit
-EXPOSE 8501
-
-# Command to run the Streamlit service
-CMD ["streamlit", "run", "main.py"]
+# Default command
+CMD ["bash", "-c", "uvicorn chatbot.main:app --host 0.0.0.0 --port 8000 & streamlit run chatbot/frontend/chatbotui.py --server.port 8501 --server.address 0.0.0.0"]

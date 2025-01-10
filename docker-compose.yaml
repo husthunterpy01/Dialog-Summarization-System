@@ -1,22 +1,21 @@
-version: '3.8'
-
+version: "3.9"
 services:
-  fastapi:
+  backend:
     build:
       context: .
-      target: fastapi
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    command: uvicorn chatbot.main:app --host 0.0.0.0 --port 8000
     volumes:
       - .:/app
-    depends_on:
-      - streamlit
 
-  streamlit:
+  frontend:
     build:
       context: .
-      target: streamlit
+      dockerfile: Dockerfile
     ports:
       - "8501:8501"
+    command: streamlit run chatbot/frontend/chatbotui.py --server.port 8501 --server.address 0.0.0.0
     volumes:
       - .:/app

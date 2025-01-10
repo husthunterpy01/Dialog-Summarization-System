@@ -164,7 +164,7 @@ Details can be witnessed on wandb records:
 For the fine-tuned checkpoint, I have already uploaded on huggingface, please visit this site to get the model: [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) 
 
 ## Chat bot execution
-For the full demo, please download the video at [demo_video](demo_video) 
+For the full demo, please download the video at [demo_video](demo_video) or visit this site [Dialog Summarization System Demo](https://www.youtube.com/watch?v=-LUDuQUJZ8c)
 ### Document for retrival
 In this demo, I use the Iphonne User Guide as the document for this RAG chatbot, referring to [Customer-Service-Handbook-English.pdf](./docs). I have already uploaded some other documents on the Docs Folder for testing, or you can also use other types of documents to test with this chatbot.
 The document uploaded will be saved in the vector database, here is a screenshot of a document I have uploaded:

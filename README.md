@@ -63,7 +63,7 @@ Ensure you have the following installed on your system:
    git clone git@github.com:husthunterpy01/Dialog-Summarization-System.git
    cd Dialog-Summarization-System
    ```
-   Before continuing, here are some notification about setting up .env file inside chatbot folder:
+   Before continuing, here are some notification about setting up **.env** file inside chatbot folder:
    - Create a LLM_Model and fine-tuned-model
    - For the LLM_Model, visit hugging face and download the .gguf model [Granite model](https://huggingface.co/bartowski/granite-3.1-3b-a800m-instruct-GGUF)
    - For fine-tuned-model, please download the checkpoint from [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) into the folder and points to the checkpoint you want

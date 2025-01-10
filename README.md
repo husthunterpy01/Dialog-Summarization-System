@@ -2,6 +2,49 @@
 
 ## Summary
 This project implements a Retrieval-Augmented Generation (RAG) chatbot system enhanced with dialog summarization using a fine-tuned BART model. The summarization improves response efficiency and context handling in customer-service interactions. The system supports document uploads for Q&A, enhanced retrieval methods, and performance comparison with/without dialog summaries.
+## Table of contents
+## Project structure
+
+```text
+ETL_DWH_AWS_Project
+├── chatbot
+│   ├── chatbotservice/                  # Contains backend service logic for the chatbot
+│   │   ├── __init__.py                  # Package initialization
+│   │   ├── chatbot_service.py           # Core chatbot service
+│   │   ├── chatbotlogsummary_service.py # Service to summarize chatbot logs
+│   │   ├── chatlog_service.py           # Service for chat log operations
+│   │   ├── texretriever_service.py      # Text retrieval services
+│   │   └── vectorHandlingService.py     # Services for vector operations
+│   ├── controller/                      # Handles API requests and routing
+│   │   ├── __init__.py                  # Package initialization
+│   │   └── chatbotcontroller.py         # Main controller for chatbot APIs
+│   ├── frontend/                        # Frontend for the chatbot (Streamlit UI)
+│   │   ├── __init__.py                  # Package initialization
+│   │   └── chatbotui.py                 # Streamlit-based chatbot UI
+│   ├── model/                           # Data models for the chatbot system
+│   │   ├── __init__.py                  # Package initialization
+│   │   ├── chatlog.py                   # Model for chat log data
+│   │   ├── chatmessage.py               # Model for individual chat messages
+│   │   ├── chatsummarizationrequest.py  # Model for summarization requests
+│   │   ├── chatsummarysession.py        # Model for chat session summary
+│   │   └── queryresponse.py             # Model for query responses
+│   ├── utils/                           # Utility functions for various operations
+│   │   ├── __init__.py                  # Package initialization
+│   │   ├── database_utils.py            # Database operation utilities
+│   │   ├── embedding_utils.py           # Embedding handling utilities
+│   │   ├── lmmodel_utils.py             # Language model utilities
+│   │   ├── semanticembedding_utils.py   # Semantic embedding-related utilities
+│   │   └── weightrepriorcalc_utils.py   # Utility for weighted recalculations
+│   ├── .env                             # Environment variables configuration file
+│   ├── __init__.py                      # Package initialization
+│   └── main.py                          # Entry point for backend (Uvicorn with FastAPI)
+├── dataset                              # Datasets for the project
+├── docs                                 # Project documentation
+├── image                                # Images and assets for the project
+├── model_trainning                      # Model training scripts and related files for the BART-based
+└── reference                            # Reference materials and documents
+```
+
 ## Environment setup
 To set up the environment for running this project, follow these steps:
 

@@ -1,7 +1,17 @@
 # Dialog summarization system for a RAG chatbot system
 
 ## Summary
+This project implements a Retrieval-Augmented Generation (RAG) chatbot system enhanced with dialog summarization using a fine-tuned BART model. The summarization improves response efficiency and context handling in customer-service interactions. The system supports document uploads for Q&A, enhanced retrieval methods, and performance comparison with/without dialog summaries.
 ## Environment setup
+To set up the environment for running this project, follow these steps:
+
+### Prerequisites
+Ensure you have the following installed on your system:
+- **Python 3.8 or higher**
+- **pip** (Python package manager)
+- **Git** (optional, for cloning the repository)
+- **Docker** (optional, for containerized setup)
+
 ## Fine-tuning BART-based with SamSUM and TweeetSUM
 <details>
 <summary> Dataset</summary>

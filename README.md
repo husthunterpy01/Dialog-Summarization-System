@@ -63,7 +63,12 @@ Ensure you have the following installed on your system:
    git clone git@github.com:husthunterpy01/Dialog-Summarization-System.git
    cd Dialog-Summarization-System
    ```
-2. **Application setup with Docker**
+   Before continuing, here are some notification about setting up .env file inside chatbot folder:
+   - Create a LLM_Model and fine-tuned-model
+   - For the LLM_Model, visit hugging face and download the .gguf model [Granite model](https://huggingface.co/bartowski/granite-3.1-3b-a800m-instruct-GGUF)
+   - For fine-tuned-model, please download the checkpoint from [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) into the folder and points to the checkpoint you want
+   - For mongodb uri configuration, please follow this tutorial [mongodburi_video](https://www.youtube.com/watch?v=LTKgKt_t1JE) 
+3. **Application setup with Docker**
    If you prefer running with Docker, please execute this one: 
    ```bash
    docker-compose up --build
@@ -74,7 +79,7 @@ Ensure you have the following installed on your system:
    Backend (FastAPI): http://localhost:8000
    Frontend (Streamlit): http://localhost:8501   
    ```
-3. **Application setup without Docker**
+4. **Application setup without Docker**
    In terms where there exists issues with Docker file, you can still setup this project as followed:
    Setup the virtual environment:
    ```bash
@@ -159,6 +164,7 @@ Details can be witnessed on wandb records:
 For the fine-tuned checkpoint, I have already uploaded on huggingface, please visit this site to get the model: [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) 
 
 ## Chat bot execution
+For the full demo, please download the video at [demo_video](demo_video) 
 ### Document for retrival
 In this demo, I use the Iphonne User Guide as the document for this RAG chatbot, referring to [Customer-Service-Handbook-English.pdf](./docs). I have already uploaded some other documents on the Docs Folder for testing, or you can also use other types of documents to test with this chatbot.
 The document uploaded will be saved in the vector database, here is a screenshot of a document I have uploaded:

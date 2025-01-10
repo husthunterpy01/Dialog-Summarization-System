@@ -32,7 +32,7 @@ ETL_DWH_AWS_Project
 │   │   ├── __init__.py                  # Package initialization
 │   │   ├── database_utils.py            # Database operation utilities
 │   │   ├── embedding_utils.py           # Embedding handling utilities
-│   │   ├── lmmodel_utils.py             # Language model utilities
+│   │   ├── llmmodel_utils.py             # Language model utilities
 │   │   ├── semanticembedding_utils.py   # Semantic embedding-related utilities
 │   │   └── weightrepriorcalc_utils.py   # Utility for weighted recalculations
 │   ├── .env                             # Environment variables configuration file

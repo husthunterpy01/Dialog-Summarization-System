@@ -166,7 +166,7 @@ The document uploaded will be saved in the vector database, here is a screenshot
 ![Header](./image/Chatbot/Database_saving/document_db_saving.png) 
 
 
-### Method for increaseing searching performance
+### Method for increasing searching performance
 As the base RAG architecture does not work well for document retrival in some cases, I have implemented some methods to improve the retrival performance
 <details>
 <summary> Hybrid search</summary>

@@ -50,7 +50,7 @@ To set up the environment for running this project, follow these steps:
 
 ### Prerequisites
 Ensure you have the following installed on your system:
-- **Python 3.8 or higher**
+- **Python 3.10 or higher**
 - **pip** (Python package manager)
 - **Git** (optional, for cloning the repository)
 - **Docker** (optional, for containerized setup)
@@ -62,11 +62,41 @@ Ensure you have the following installed on your system:
    ```bash
    git clone git@github.com:husthunterpy01/Dialog-Summarization-System.git
    cd Dialog-Summarization-System
-2. **Install depedencies**
-
-   Setup the dependencies based on the given version on the requirements.txt for this project:
+   ```
+2. **Application setup with Docker**
+   If you prefer running with Docker, please execute this one: 
    ```bash
-   pip install -r requirements.txt
+   docker-compose up --build
+   ```
+   As you run the application will pop up in the website for usage.
+   For further testing with application, after running the command, you can access the service as followed:
+   ```text
+   Backend (FastAPI): http://localhost:8000
+   Frontend (Streamlit): http://localhost:8501   
+   ```
+3. **Application setup without Docker**
+   In terms where there exists issues with Docker file, you can still setup this project as followed:
+   Setup the virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate    # For Linux/MacOS
+   venv\Scripts\activate       # For Windows
+   ```
+   Activates the backend webserver
+   ```bash
+   cd chatbot
+   uvicorn main:app --host 0.0.0.0 --port 8000
+   ```
+   Activates the frontend:
+    ```bash
+    cd chatbot/frontend
+    streamlit run chatbotui.py --server.port 8501 --server.address 0.0.0.0
+    ```
+   As you run the application will pop up in the website for usage.
+   For further testing with application, after running the command, you can access the service as followed:
+   ```text
+   Backend (FastAPI): http://localhost:8000
+   Frontend (Streamlit): http://localhost:8501   
    ```
 ## Fine-tuning BART-based with SamSUM and TweeetSUM
 <details>

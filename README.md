@@ -11,7 +11,20 @@ Ensure you have the following installed on your system:
 - **pip** (Python package manager)
 - **Git** (optional, for cloning the repository)
 - **Docker** (optional, for containerized setup)
+### Steps for local setups 
+1. **Clone the Repository**
 
+   Clone this repository to your local machine:
+
+   ```bash
+   git clone git@github.com:husthunterpy01/Dialog-Summarization-System.git
+   cd Dialog-Summarization-System
+2. **Install depedencies**
+
+   Setup the dependencies based on the given version on the requirements.txt for this project:
+   ```bash
+   pip install -r requirements.txt
+   ```
 ## Fine-tuning BART-based with SamSUM and TweeetSUM
 <details>
 <summary> Dataset</summary>

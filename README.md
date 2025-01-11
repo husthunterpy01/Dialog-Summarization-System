@@ -1,8 +1,19 @@
-# Dialog summarization system for a RAG chatbot system
+# 📖 Dialog summarization system for a RAG chatbot system
 
+## Table of content
+- [Dialog Summarization System for a RAG Chatbot System](#dialog-summarization-system-for-a-rag-chatbot-system)
+  - [Summary](#summary)
+  - [Project Structure](#project-structure)
+  - [Environment Setup](#environment-setup)
+  - [Fine-tuning BART-based with SamSUM and TweetSUM](#fine-tuning-bart-based-with-samsum-and-tweetsum)
+  - [Chat Bot Execution](#chat-bot-execution)
+  - [Performance Comparison with Summary and Without Summary as Context](#performance-comparison-with-summary-and-without-summary-as-context)
+  - [Conclusion](#conclusion)
+  
 ## Summary
-This project implements a Retrieval-Augmented Generation (RAG) chatbot system enhanced with dialog summarization using a fine-tuned BART model. The summarization improves response efficiency and context handling in customer-service interactions. The system supports document uploads for Q&A, enhanced retrieval methods, and performance comparison with/without dialog summaries.
-## Table of contents
+This project implements a Retrieval-Augmented Generation (**RAG**) chatbot system enhanced with dialog summarization using a **fine-tuned BART** model. The summarization improves response efficiency and context handling in customer-service interactions. The system supports document uploads for Q&A, enhanced retrieval methods, and performance comparison with/without dialog summaries.
+
+![Header](./image/Architecture/system_architecture.png)
 ## Project structure
 
 ```text
@@ -64,11 +75,25 @@ Ensure you have the following installed on your system:
    cd Dialog-Summarization-System
    ```
    Before continuing, here are some notification about setting up **.env** file inside chatbot folder:
+   ```text
+   # MongoDb Atlas configuration
+   MONGO_URI=xxxxxxxxxxxxxxxxxxxxxxxxx
+   VECTOR_DB=xxxxxxxxxxxx
+   VECTOR_DOCUMENT=xxxxxxxxxxxxxxx
+   VECTOR_CONVERSATION_DOCUMENT=xxxxxxxxxxxx
+   
+   # LLM model Configuration
+   LLM_MODEL = "./Dialog-Summarization-System/LLM_Model/granite-3.1-3b-a800m-instruct-Q6_K.gguf"
+   FINE_TUNE_MODEL = "./Dialog-Summarization-System/finetunedmodel/fine-tuned-model/checkpoint-1100"
+   # FastAPI endpoint
+   CHAT_ENDPOINT = http://127.0.0.1:8000/ 
+   ```
    - Create a LLM_Model and fine-tuned-model
-   - For the LLM_Model, visit hugging face and download the .gguf model [Granite model](https://huggingface.co/bartowski/granite-3.1-3b-a800m-instruct-GGUF)
-   - For fine-tuned-model, please download the checkpoint from [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) into the folder and points to the checkpoint you want
-   - For mongodb uri configuration, please follow this tutorial [mongodburi_video](https://www.youtube.com/watch?v=LTKgKt_t1JE) 
-3. **Application setup with Docker**
+   - For the **LLM_Model**, visit hugging face and download the .gguf model [Granite model](https://huggingface.co/bartowski/granite-3.1-3b-a800m-instruct-GGUF)
+   - For **FINE_TUNE_MODEL**, please download the checkpoint from [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) into the folder and points to the checkpoint you want
+   - For **MONGO_URI** configuration, please follow this tutorial [mongodburi_video](https://www.youtube.com/watch?v=LTKgKt_t1JE)
+   - For other configurations, you can name the database, document as you want
+3. **Application setup with Docker** (You can skip step 3 if conducting by this tep)
    If you prefer running with Docker, please execute this one: 
    ```bash
    docker-compose up --build
@@ -79,7 +104,7 @@ Ensure you have the following installed on your system:
    Backend (FastAPI): http://localhost:8000
    Frontend (Streamlit): http://localhost:8501   
    ```
-4. **Application setup without Docker**
+4. **Application setup without Docker** 
    In terms where there exists issues with Docker file, you can still setup this project as followed:
    Setup the virtual environment:
    ```bash
@@ -103,7 +128,7 @@ Ensure you have the following installed on your system:
    Backend (FastAPI): http://localhost:8000
    Frontend (Streamlit): http://localhost:8501   
    ```
-## Fine-tuning BART-based with SamSUM and TweeetSUM
+## Fine-tuning BART-based with SamSUM and TweetSUM
 <details>
 <summary> Dataset</summary>
 In this project, I will conduct on a 2 public dataset called SamSUM(2019) and TweetSUM(2021), in which the 1st will be used for pre-trained and the last one is used for fine-tune purpose.
@@ -164,7 +189,7 @@ Details can be witnessed on wandb records:
 For the fine-tuned checkpoint, I have already uploaded on huggingface, please visit this site to get the model: [BART_SamSUM_TweetSUM](https://huggingface.co/husthunterpy01/BART-SamTweetSUM/tree/main) 
 
 ## Chat bot execution
-For the full demo, please download the video at [demo_video](demo_video) or visit this site [Dialog Summarization System Demo](https://www.youtube.com/watch?v=-LUDuQUJZ8c)
+For the full demo, please download the video at [demo_video](demo_video/) or visit this site [Dialog Summarization System Demo](https://www.youtube.com/watch?v=-LUDuQUJZ8c)
 ### Document for retrival
 In this demo, I use the Iphonne User Guide as the document for this RAG chatbot, referring to [Customer-Service-Handbook-English.pdf](./docs). I have already uploaded some other documents on the Docs Folder for testing, or you can also use other types of documents to test with this chatbot.
 The document uploaded will be saved in the vector database, here is a screenshot of a document I have uploaded:
